@@ -1,0 +1,33 @@
+*** PANATHINAIKOS AKTOR ATHENS - Head coach: Ergin Ataman ***
+
+FINAL SCORE: Panathinaikos 91 - Partizan 69. Total PIR: 117.
+
+PLAYER: T. Shorts (TEAM: Panathinaikos) - STATS: PTS: 5, REB: 2 (O: 0, D: 2), AST: 1, STL: 0, TO: 2, PIR: -9, 2FG: 1/5 (20.0%), 3FG: 1/2 (50.0%), FT: 0/2 (0.0%), MIN: 14:51
+PLAYER: P. Kalaitzakis (TEAM: Panathinaikos) - STATS: PTS: 0, REB: 2 (O: 1, D: 1), AST: 0, STL: 0, TO: 0, PIR: -1, 2FG: 0/0 (0.0%), 3FG: 0/2 (0.0%), FT: 0/0 (0.0%), MIN: 05:21
+PLAYER: K. Sloukas (TEAM: Panathinaikos) - STATS: PTS: 7, REB: 3 (O: 1, D: 2), AST: 10 (Led team), STL: 2, TO: 1, PIR: 20, 2FG: 1/1 (100.0%), 3FG: 1/2 (50.0%), FT: 2/2 (100.0%), MIN: 18:41
+PLAYER: V. Rogkavopoulos (TEAM: Panathinaikos) - STATS: PTS: 13, REB: 4 (O: 1, D: 3), AST: 0, STL: 0, TO: 1, PIR: 12, 2FG: 5/5 (100.0%), 3FG: 1/3 (33.3%), FT: 0/0 (0.0%), MIN: 19:23
+PLAYER: A. Samodurov (TEAM: Panathinaikos) - STATS: PTS: 3, REB: 0, AST: 0, STL: 1, TO: 1, PIR: 2, 2FG: 1/2 (50.0%), 3FG: 0/0 (0.0%), FT: 1/1 (100.0%), MIN: 08:56
+PLAYER: J. Grant (TEAM: Panathinaikos) - STATS: PTS: 8, REB: 1 (O: 1, D: 0), AST: 3, STL: 0, TO: 1, PIR: 5, 2FG: 4/7 (57.1%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 28:30
+PLAYER: G. Kouzeloglou (TEAM: Panathinaikos) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: -4, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 03:17
+PLAYER: K. Nunn (TEAM: Panathinaikos) - STATS: PTS: 26 (Led team), REB: 11 (O: 7, D: 4), AST: 2, STL: 1, TO: 0, PIR: 39 (Highest PIR), 2FG: 4/5 (80.0%), 3FG: 3/4 (75.0%), FT: 9/12 (75.0%), MIN: 30:56
+PLAYER: K. Faried (TEAM: Panathinaikos) - STATS: PTS: 12, REB: 11 (O: 4, D: 7), AST: 3, STL: 1, TO: 1, PIR: 11, 2FG: 6/10 (60.0%), 3FG: 0/0 (0.0%), FT: 0/1 (0.0%), MIN: 22:54
+PLAYER: M. Grigonis (TEAM: Panathinaikos) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: -1, 2FG: 0/0 (0.0%), 3FG: 0/2 (0.0%), FT: 0/0 (0.0%), MIN: 03:35
+PLAYER: J. Hernangomez (TEAM: Panathinaikos) - STATS: PTS: 8, REB: 15 (Led team), AST: 2, STL: 0, TO: 2, PIR: 22, 2FG: 3/4 (75.0%), 3FG: 0/3 (0.0%), FT: 2/2 (100.0%), MIN: 21:07
+PLAYER: K. Mitoglou (TEAM: Panathinaikos) - STATS: PTS: 9, REB: 6 (O: 3, D: 3), AST: 3, STL: 1, TO: 3, PIR: 10, 2FG: 2/4 (50.0%), 3FG: 1/3 (33.3%), FT: 2/2 (100.0%), MIN: 22:29
+
+*** PARTIZAN MOZZART BET BELGRADE - Head coach: Zeljko Obradovic ***
+
+FINAL SCORE: Partizan 69 - Panathinaikos 91. Total PIR: -110.
+
+PLAYER: S. Milton (TEAM: Partizan) - STATS: PTS: 9, REB: 2 (O: 0, D: 2), AST: 5, STL: 0, TO: 1, PIR: 6, 2FG: 3/7 (42.9%), 3FG: 0/2 (0.0%), FT: 3/4 (75.0%), MIN: 27:54
+PLAYER: M. Muurinen (TEAM: Partizan) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: -2, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 01:08
+PLAYER: D. Washington (TEAM: Partizan) - STATS: PTS: 8, REB: 3 (O: 0, D: 3), AST: 0, STL: 1, TO: 0, PIR: 12, 2FG: 2/2 (100.0%), 3FG: 0/3 (0.0%), FT: 4/4 (100.0%), MIN: 16:09
+PLAYER: D. Osetkowski (TEAM: Partizan) - STATS: PTS: 4, REB: 2 (O: 1, D: 1), AST: 0, STL: 0, TO: 0, PIR: 6, 2FG: 1/2 (50.0%), 3FG: 0/1 (0.0%), FT: 2/2 (100.0%), MIN: 10:00
+PLAYER: V. Marinkovic (TEAM: Partizan) - STATS: PTS: 4, REB: 1 (O: 0, D: 1), AST: 0, STL: 0, TO: 0, PIR: 3, 2FG: 1/1 (100.0%), 3FG: 0/2 (0.0%), FT: 2/2 (100.0%), MIN: 23:26
+PLAYER: A. Pokusevski (TEAM: Partizan) - STATS: PTS: 4, REB: 2 (O: 0, D: 2), AST: 1, STL: 0, TO: 0, PIR: 3, 2FG: 2/2 (100.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 13:10
+PLAYER: S. Brown (TEAM: Partizan) - STATS: PTS: 16, REB: 3 (O: 1, D: 2), AST: 2, STL: 1, TO: 2, PIR: 11, 2FG: 3/7 (42.9%), 3FG: 3/6 (50.0%), FT: 1/1 (100.0%), MIN: 27:06
+PLAYER: I. Bonga (TEAM: Partizan) - STATS: PTS: 6, REB: 4 (O: 0, D: 4), AST: 1, STL: 0, TO: 0, PIR: 9, 2FG: 3/5 (60.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 20:53
+PLAYER: J. Parker (TEAM: Partizan) - STATS: PTS: 7, REB: 4 (O: 0, D: 4), AST: 1, STL: 0, TO: 0, PIR: -4, 2FG: 1/3 (33.3%), 3FG: 1/5 (20.0%), FT: 2/2 (100.0%), MIN: 21:49
+PLAYER: B. Fernando (TEAM: Partizan) - STATS: PTS: 9, REB: 3 (O: 1, D: 2), AST: 2, STL: 0, TO: 0, PIR: 11, 2FG: 4/7 (57.1%), 3FG: 0/0 (0.0%), FT: 1/1 (100.0%), MIN: 14:09
+PLAYER: N. Calathes (TEAM: Partizan) - STATS: PTS: 0, REB: 1 (O: 0, D: 1), AST: 0, STL: 0, TO: 0, PIR: -1, 2FG: 0/0 (0.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 08:25
+PLAYER: T. Jones (TEAM: Partizan) - STATS: PTS: 1, REB: 3 (O: 1, D: 2), AST: 1, STL: 1, TO: 3, PIR: 3, 2FG: 1/2 (50.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 15:51

@@ -1,0 +1,32 @@
+*** MACCABI RAPYD TEL AVIV - Head coach: Oded Kattash ***
+
+FINAL SCORE: Maccabi 88 - Armani Milan 102. Total PIR: -70.
+
+PLAYER: J. Lundberg (TEAM: Maccabi) - STATS: PTS: 3, REB: 1 (O: 0, D: 1), AST: 0, STL: 0, TO: 0, PIR: 1, 2FG: 1/3 (33.3%), 3FG: 0/1 (0.0%), FT: 1/1 (100.0%), MIN: 07:50
+PLAYER: J. Clark III (TEAM: Maccabi) - STATS: PTS: 10, REB: 3 (O: 0, D: 3), AST: 5, STL: 0, TO: 1, PIR: 13, 2FG: 2/6 (33.3%), 3FG: 1/2 (50.0%), FT: 3/4 (75.0%), MIN: 24:56
+PLAYER: M. Santos (TEAM: Maccabi) - STATS: PTS: 8, REB: 1 (O: 0, D: 1), AST: 0, STL: 0, TO: 3, PIR: 5, 2FG: 1/2 (50.0%), 3FG: 2/3 (66.7%), FT: 0/0 (0.0%), MIN: 16:06
+PLAYER: G. Lavi (TEAM: Maccabi) - STATS: PTS: 4, REB: 1 (O: 0, D: 1), AST: 2, STL: 0, TO: 5, PIR: 9, 2FG: 1/2 (50.0%), 3FG: 0/1 (0.0%), FT: 2/2 (100.0%), MIN: 20:21
+PLAYER: L. Walker IV (TEAM: Maccabi) - STATS: PTS: 21 (Led team), REB: 4 (O: 0, D: 4), AST: 4, STL: 1, TO: 0, PIR: 21 (Highest PIR), 2FG: 3/6 (50.0%), 3FG: 4/8 (50.0%), FT: 3/4 (75.0%), MIN: 24:47
+PLAYER: R. Sorkin (TEAM: Maccabi) - STATS: PTS: 20, REB: 4 (O: 0, D: 4), AST: 1, STL: 0, TO: 3, PIR: 13, 2FG: 7/12 (58.3%), 3FG: 2/2 (100.0%), FT: 0/0 (0.0%), MIN: 29:11
+PLAYER: O. Brissett (TEAM: Maccabi) - STATS: PTS: 4, REB: 6 (O: 1, D: 5, Led team), AST: 2, STL: 0, TO: 1, PIR: 4, 2FG: 0/4 (0.0%), 3FG: 1/3 (33.3%), FT: 1/2 (50.0%), MIN: 28:18
+PLAYER: W. Rayman (TEAM: Maccabi) - STATS: PTS: 2, REB: 3 (O: 2, D: 1), AST: 0, STL: 0, TO: 1, PIR: 3, 2FG: 0/1 (0.0%), 3FG: 0/0 (0.0%), FT: 2/2 (100.0%), MIN: 15:31
+PLAYER: J. DiBartolomeo (TEAM: Maccabi) - STATS: PTS: 6, REB: 2 (O: 0, D: 2), AST: 0, STL: 0, TO: 0, PIR: 9, 2FG: 0/0 (0.0%), 3FG: 2/3 (66.7%), FT: 0/0 (0.0%), MIN: 11:45
+PLAYER: C. Omoruyi (TEAM: Maccabi) - STATS: PTS: 0, REB: 1 (O: 1, D: 0), AST: 0, STL: 0, TO: 0, PIR: -1, 2FG: 0/1 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 04:59
+PLAYER: T. Blatt (TEAM: Maccabi) - STATS: PTS: 10, REB: 3 (O: 1, D: 2), AST: 1, STL: 0, TO: 0, PIR: 13, 2FG: 1/1 (100.0%), 3FG: 2/4 (50.0%), FT: 2/2 (100.0%), MIN: 16:16
+
+*** EA7 EMPORIO ARMANI MILAN - Head coach: Giuseppe Poeta ***
+
+FINAL SCORE: Armani Milan 102 - Maccabi 88. Total PIR: 127.
+
+PLAYER: D. Booker (TEAM: Armani Milan) - STATS: PTS: 8, REB: 1 (O: 0, D: 1), AST: 1, STL: 0, TO: 1, PIR: 6, 2FG: 4/4 (100.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 15:38
+PLAYER: L. Bolmaro (TEAM: Armani Milan) - STATS: PTS: 11, REB: 6 (O: 1, D: 5), AST: 3, STL: 1, TO: 1, PIR: 15, 2FG: 3/6 (50.0%), 3FG: 1/5 (33.3%), FT: 2/2 (100.0%), MIN: 20:59
+PLAYER: A. Brooks (TEAM: Armani Milan) - STATS: PTS: 10, REB: 7 (O: 1, D: 6, Led team), AST: 4, STL: 2, TO: 1, PIR: 20, 2FG: 2/4 (50.0%), 3FG: 2/5 (40.0%), FT: 0/0 (0.0%), MIN: 23:32
+PLAYER: Z. LeDay (TEAM: Armani Milan) - STATS: PTS: 16, REB: 6 (O: 2, D: 4), AST: 3, STL: 1, TO: 2, PIR: 20, 2FG: 2/3 (66.7%), 3FG: 2/5 (40.0%), FT: 6/6 (100.0%), MIN: 23:35
+PLAYER: G. Ricci (TEAM: Armani Milan) - STATS: PTS: 8, REB: 3 (O: 1, D: 2), AST: 2, STL: 0, TO: 0, PIR: 9, 2FG: 1/1 (100.0%), 3FG: 2/3 (66.7%), FT: 0/0 (0.0%), MIN: 19:42
+PLAYER: D. Flaccadori (TEAM: Armani Milan) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: -3, 2FG: 0/0 (0.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 03:17
+PLAYER: M. Gudaitis (TEAM: Armani Milan) - STATS: PTS: 7, REB: 2 (O: 0, D: 2), AST: 2, STL: 1, TO: 1, PIR: 10, 2FG: 2/2 (100.0%), 3FG: 0/2 (0.0%), FT: 3/3 (100.0%), MIN: 19:31
+PLAYER: S. Shields (TEAM: Armani Milan) - STATS: PTS: 26 (Led team), REB: 7 (O: 2, D: 5), AST: 6 (Led team), STL: 1, TO: 3, PIR: 39 (Highest PIR), 2FG: 4/4 (100.0%), 3FG: 3/7 (42.9%), FT: 9/9 (100.0%), MIN: 25:36
+PLAYER: B. Nebo (TEAM: Armani Milan) - STATS: PTS: 11, REB: 3 (O: 1, D: 2), AST: 2, STL: 2, TO: 1, PIR: 14, 2FG: 2/5 (40.0%), 3FG: 0/0 (0.0%), FT: 7/7 (100.0%), MIN: 20:49
+PLAYER: B. Dunston (TEAM: Armani Milan) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:14
+PLAYER: O. Ellis (TEAM: Armani Milan) - STATS: PTS: 1, REB: 7 (O: 1, D: 6), AST: 4, STL: 0, TO: 1, PIR: 3, 2FG: 0/3 (0.0%), 3FG: 0/1 (0.0%), FT: 1/2 (50.0%), MIN: 27:07
+PLAYER: N. Mannion (TEAM: Armani Milan) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00

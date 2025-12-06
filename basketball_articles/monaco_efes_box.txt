@@ -1,0 +1,33 @@
+*** AS MONACO - Head coach: Vassilis Spanoulls ***
+
+FINAL SCORE: Monaco 102 - Efes 66. Total PIR: 125.
+
+PLAYER: E. Okobo (TEAM: Monaco) - STATS: PTS: 9, REB: 1 (O: 0, D: 1), AST: 4, STL: 1, TO: 2, PIR: 11, 2FG: 2/3 (66.7%), 3FG: 1/3 (33.3%), FT: 2/2 (100.0%), MIN: 25:00
+PLAYER: J. Blossomgame (TEAM: Monaco) - STATS: PTS: 6, REB: 5 (O: 3, D: 2), AST: 2, STL: 2, TO: 0, PIR: 11, 2FG: 2/5 (40.0%), 3FG: 0/0 (0.0%), FT: 2/2 (100.0%), MIN: 19:56
+PLAYER: Y. Makoundou (TEAM: Monaco) - STATS: PTS: 9, REB: 1 (O: 0, D: 1), AST: 1, STL: 0, TO: 0, PIR: 13, 2FG: 2/3 (66.7%), 3FG: 0/0 (0.0%), FT: 5/5 (100.0%), MIN: 06:49
+PLAYER: D. Michineau (TEAM: Monaco) - STATS: PTS: 0, REB: 1 (O: 0, D: 1), AST: 0, STL: 1, TO: 0, PIR: 1, 2FG: 0/0 (0.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 02:41
+PLAYER: D. Theis (TEAM: Monaco) - STATS: PTS: 17, REB: 2 (O: 1, D: 1), AST: 1, STL: 1, TO: 2, PIR: 18, 2FG: 7/7 (100.0%), 3FG: 0/0 (0.0%), FT: 3/5 (60.0%), MIN: 15:55
+PLAYER: A. Diallo (TEAM: Monaco) - STATS: PTS: 13, REB: 4 (O: 1, D: 3), AST: 4, STL: 2, TO: 1, PIR: 15, 2FG: 4/6 (66.7%), 3FG: 1/2 (50.0%), FT: 2/2 (100.0%), MIN: 23:24
+PLAYER: K. Hayes (TEAM: Monaco) - STATS: PTS: 12, REB: 2 (O: 2, D: 0), AST: 2, STL: 0, TO: 1, PIR: 13, 2FG: 4/6 (66.7%), 3FG: 0/0 (0.0%), FT: 4/4 (100.0%), MIN: 15:38
+PLAYER: T. Tarpey (TEAM: Monaco) - STATS: PTS: 5, REB: 1 (O: 0, D: 1), AST: 1, STL: 0, TO: 0, PIR: 8, 2FG: 0/0 (0.0%), 3FG: 1/1 (100.0%), FT: 2/2 (100.0%), MIN: 12:14
+PLAYER: N. Nedovic (TEAM: Monaco) - STATS: PTS: 3, REB: 2 (O: 0, D: 2), AST: 1, STL: 0, TO: 0, PIR: 2, 2FG: 1/2 (50.0%), 3FG: 0/3 (0.0%), FT: 1/1 (100.0%), MIN: 13:16
+PLAYER: M. Strazel (TEAM: Monaco) - STATS: PTS: 12, REB: 2 (O: 0, D: 2), AST: 5, STL: 3, TO: 1, PIR: 21 (Highest PIR), 2FG: 3/3 (100.0%), 3FG: 1/5 (20.0%), FT: 3/3 (100.0%), MIN: 23:23
+PLAYER: N. Mirotic (TEAM: Monaco) - STATS: PTS: 9, REB: 7 (O: 3, D: 4, Led team), AST: 5, STL: 3, TO: 1, PIR: 20, 2FG: 2/5 (40.0%), 3FG: 1/3 (33.3%), FT: 2/2 (100.0%), MIN: 17:41
+PLAYER: M. James (TEAM: Monaco) - STATS: PTS: 7, REB: 2 (O: 0, D: 2), AST: 6 (Led team), STL: 0, TO: 1, PIR: 13, 2FG: 1/2 (50.0%), 3FG: 0/3 (0.0%), FT: 5/5 (100.0%), MIN: 24:03
+
+*** ANADOLU EFES ISTANBUL - Head coach: Igor Kokoskov ***
+
+
+
+PLAYER: R. Beaubois (TEAM: Anadolu Efes) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00
+PLAYER: S. Hazer (TEAM: Anadolu Efes) - STATS: PTS: 6, REB: 0, AST: 1, STL: 0, TO: 3, PIR: 4, 2FG: 2/4 (50.0%), 3FG: 0/3 (0.0%), FT: 2/3 (66.7%), MIN: 21:46
+PLAYER: J. Loyd (TEAM: Anadolu Efes) - STATS: PTS: 13, REB: 1 (O: 0, D: 1), AST: 5, STL: 0, TO: 4, PIR: 12, 2FG: 2/3 (66.7%), 3FG: 2/4 (50.0%), FT: 1/5 (20.0%), MIN: 25:11
+PLAYER: N. Weiler-Babb (TEAM: Anadolu Efes) - STATS: PTS: 0, REB: 0, AST: 4, STL: 1, TO: 6, PIR: -1, 2FG: 0/2 (0.0%), 3FG: 0/4 (0.0%), FT: 1/3 (33.3%), MIN: 26:14
+PLAYER: I. Cordlinier (TEAM: Anadolu Efes) - STATS: PTS: 16 (Led team), REB: 2 (O: 0, D: 2), AST: 3, STL: 1, TO: 1, PIR: 19 (Highest PIR), 2FG: 4/4 (100.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 28:07
+PLAYER: R. Smits (TEAM: Anadolu Efes) - STATS: PTS: 14, REB: 5 (O: 2, D: 3), AST: 0, STL: 1, TO: 2, PIR: 7, 2FG: 4/5 (80.0%), 3FG: 0/2 (0.0%), FT: 1/2 (50.0%), MIN: 28:46
+PLAYER: B. Dessert (TEAM: Anadolu Efes) - STATS: PTS: 0, REB: 0, AST: 1, STL: 0, TO: 3, PIR: -4, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 11:16
+PLAYER: C. Swider (TEAM: Anadolu Efes) - STATS: PTS: 3, REB: 0, AST: 0, STL: 1, TO: 0, PIR: -1, 2FG: 0/0 (0.0%), 3FG: 1/1 (100.0%), FT: 0/0 (0.0%), MIN: 07:50
+PLAYER: D. Mutaf (TEAM: Anadolu Efes) - STATS: PTS: 2, REB: 0, AST: 1, STL: 0, TO: 0, PIR: 1, 2FG: 1/1 (100.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 05:05
+PLAYER: E. Osmani (TEAM: Anadolu Efes) - STATS: PTS: 12, REB: 4 (O: 0, D: 4), AST: 4, STL: 1, TO: 2, PIR: 10, 2FG: 3/5 (60.0%), 3FG: 2/5 (40.0%), FT: 0/0 (0.0%), MIN: 30:09
+PLAYER: E. Yilmaz (TEAM: Anadolu Efes) - STATS: PTS: 2, REB: 3 (O: 0, D: 3), AST: 0, STL: 0, TO: 0, PIR: 4, 2FG: 1/1 (100.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 07:22
+PLAYER: K. Jones (TEAM: Anadolu Efes) - STATS: PTS: 2, REB: 1 (O: 1, D: 0), AST: 0, STL: 0, TO: 0, PIR: 4, 2FG: 1/1 (100.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 08:14

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+chroma_db/
+*.gguf
+agent_project_ven/
+llm_project_venv/
