@@ -28,5 +28,5 @@ PLAYER: M. Gudaitis (TEAM: Armani Milan) - STATS: PTS: 7, REB: 2 (O: 0, D: 2), A
 PLAYER: S. Shields (TEAM: Armani Milan) - STATS: PTS: 26 (Led team), REB: 7 (O: 2, D: 5), AST: 6 (Led team), STL: 1, TO: 3, PIR: 39 (Highest PIR), 2FG: 4/4 (100.0%), 3FG: 3/7 (42.9%), FT: 9/9 (100.0%), MIN: 25:36
 PLAYER: B. Nebo (TEAM: Armani Milan) - STATS: PTS: 11, REB: 3 (O: 1, D: 2), AST: 2, STL: 2, TO: 1, PIR: 14, 2FG: 2/5 (40.0%), 3FG: 0/0 (0.0%), FT: 7/7 (100.0%), MIN: 20:49
 PLAYER: B. Dunston (TEAM: Armani Milan) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:14
-PLAYER: O. Ellis (TEAM: Armani Milan) - STATS: PTS: 1, REB: 7 (O: 1, D: 6), AST: 4, STL: 0, TO: 1, PIR: 3, 2FG: 0/3 (0.0%), 3FG: 0/1 (0.0%), FT: 1/2 (50.0%), MIN: 27:07
+PLAYER: Q. Ellis (TEAM: Armani Milan) - STATS: PTS: 1, REB: 7 (O: 1, D: 6), AST: 4, STL: 0, TO: 1, PIR: 3, 2FG: 0/3 (0.0%), 3FG: 0/1 (0.0%), FT: 1/2 (50.0%), MIN: 27:07
 PLAYER: N. Mannion (TEAM: Armani Milan) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00
