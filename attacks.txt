@@ -1,0 +1,21 @@
+AML: Adversarial Machine Attack
+
+Evasion Attacks,Poisoning Attacks,Privacy attacks 
+
+Evasion: To manipulate input data in a way that causes  a ML model to make incorrect predictions.
+Poisoning: To manipulate the training data used to train a model, compromising its performance or introducing vulnerabilities
+Privacy: To extract sensitive info from models or training data ,compromising the confidentiality of the system
+
+if an autonomous self-driving car that uses a traffic sign detection system is compromised by adversaries, it can result in the car falsely detecting a stop sign as a speed limit sign.
+
+The attacks can take place before the testing, during the testing or after the release of the model.
+
+Targeted attacks involve the calculation of an adversarial example that tricks the AI system into doing a specific action (installing spyware, forcing system to shut down)
+
+Untargeted attacks try to cause random harm to the system (tricking the system into misclassifying visuals or noises)
+
+AML attacks presents an unparalleled opportunity to delve into one of the most pressing challenges facing the field of AI today
+Securing AI and ML models is complex
+ML models -> Subsets of AI
+The author initiated the discussion by describing the classic example of how the learning process of spam filters can be manipulated by amending the content of spam emails, for example, by adding positive words that isn’t seen in spam emails but is usually found in authentic emails which can ultimately lead the anti-spam filter solution to misclassify possible spam emails that contain words of this nature and consider the emails to be legitimate.
+41 percent of ML-based mobile application development firms don’t even attempt to safeguard their models. 
