@@ -101,7 +101,7 @@ def load_local_llm():
     
     return LlamaCpp(
         model_path=GGUF_MODEL_PATH,
-        temperature=0.2, # Χαμηλότερο για μεγαλύτερη ακρίβεια στα νούμερα
+        temperature=0.2, # Χαμηλότερο για μεγαλύτερη ακρίβεια στα νουμερα
         max_tokens=512,      
         n_ctx=4096,      
         n_gpu_layers=0, 
