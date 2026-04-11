@@ -1,0 +1,39 @@
+# EUROLEAGUE COMPETITION LOGIC & RULES (SEASON 2025-2026)
+
+## 1. LEAGUE STRUCTURE AND FORMAT
+* The EuroLeague consists of 18 professional basketball teams from across Europe.
+* Regular Season: 18 teams play in a double round-robin format (one home and one away game), totaling 34 rounds.
+* Play-In Showdown: Teams finishing from 7th to 10th place in the regular season compete for the final two playoff spots (7th and 8th seed).
+* Playoffs: The top 8 teams compete in a best-of-five series (Quarterfinals).
+* Final Four: The four winners of the Quarterfinals progress to a single-elimination tournament consisting of two Semifinals, a Third-place game, and the Championship Final.
+
+## 2. STATISTICAL ABBREVIATIONS (CSV COLUMN MAPPING)
+* PTS: Points Scored.
+* REB: Total Rebounds (Defensive + Offensive).
+* AST: Assists.
+* STL: Steals.
+* TO: Turnovers (Loss of possession).
+* PIR: Performance Index Rating. A metric used to determine a player's overall efficiency.
+* 2FG: Two-point Field Goals (Successful shots / Total attempts).
+* 3FG: Three-point Field Goals (Successful shots / Total attempts).
+* FT: Free Throws (Successful shots / Total attempts).
+* MIN: Minutes Played during the game.
+* DNP: Did Not Play (used for players who were on the bench but never entered the court).
+
+## 3. PIR (PERFORMANCE INDEX RATING) FORMULA
+The PIR is calculated using the following formula:
+(Points + Rebounds + Assists + Steals + Blocks + Fouls Drawn) - (Missed Field Goals + Missed Free Throws + Turnovers + Shots Blocked + Personal Fouls Committed).
+
+## 4. TIE-BREAKING RULES (RANKING LOGIC)
+If two or more teams have the same win-loss record at the end of the regular season, they are ranked based on:
+1. Head-to-head record between the tied teams.
+2. Head-to-head point difference.
+3. Overall point difference in all regular season games.
+4. Overall points scored in all regular season games.
+
+## 5. BASIC GAME RULES
+* Game Duration: 4 quarters of 10 minutes each (total 40 minutes).
+* Overtime (OT): If the score is tied, 5-minute overtime periods are played until a winner is determined.
+* Shot Clock: 24 seconds (resets to 14 seconds after an offensive rebound).
+* Foul Out: A player is disqualified from the game after committing 5 personal fouls.
+* Team Bonus: Teams enter the bonus (free throws for every foul) after the 4th team foul in each quarter.

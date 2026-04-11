@@ -7,11 +7,11 @@ PLAYER: T. Ward (TEAM: Olympiacos) - STATS: PTS: 2, REB: 1 (O: 0, D: 1), AST: 2,
 PLAYER: S. Lee (TEAM: Olympiacos) - STATS: PTS: 4, REB: 1 (O: 0, D: 1), AST: 2, STL: 0, TO: 2, PIR: 2, 2FG: 0/1 (0.0%), 3FG: 1/1 (100.0%), FT: 1/2 (50.0%), MIN: 11:13
 PLAYER: S. Vezenkov (TEAM: Olympiacos) - STATS: PTS: 29 (Led team), REB: 15 (O: 7, D: 8, Led team), AST: 0, STL: 0, TO: 3, PIR: 28 (Highest PIR), 2FG: 6/7 (85.7%), 3FG: 5/6 (83.3%), FT: 2/2 (100.0%), MIN: 33:45
 PLAYER: K. Papanikolaou (TEAM: Olympiacos) - STATS: PTS: 3, REB: 6 (O: 2, D: 4), AST: 4, STL: 2, TO: 1, PIR: 3, 2FG: 0/0 (0.0%), 3FG: 1/5 (20.0%), FT: 0/0 (0.0%), MIN: 19:23
-PLAYER: O. Netzpoglou (TEAM: Olympiacos) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00
+PLAYER: O. Netzipoglou (TEAM: Olympiacos) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00
 PLAYER: T. Dorsey (TEAM: Olympiacos) - STATS: PTS: 16, REB: 7 (O: 1, D: 6), AST: 4, STL: 2, TO: 1, PIR: 12, 2FG: 2/4 (50.0%), 3FG: 4/8 (50.0%), FT: 0/0 (0.0%), MIN: 29:23
 PLAYER: A. Peters (TEAM: Olympiacos) - STATS: PTS: 2, REB: 3 (O: 1, D: 2), AST: 0, STL: 0, TO: 0, PIR: 2, 2FG: 1/1 (100.0%), 3FG: 0/1 (0.0%), FT: 0/0 (0.0%), MIN: 06:15
 PLAYER: N. Milutinov (TEAM: Olympiacos) - STATS: PTS: 7, REB: 9 (O: 3, D: 6), AST: 3, STL: 0, TO: 2, PIR: 16, 2FG: 3/4 (75.0%), 3FG: 0/0 (0.0%), FT: 1/1 (100.0%), MIN: 25:28
-PLAYER: K. Antekounmpo (TEAM: Olympiacos) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00
+PLAYER: K. Antetokounmpo (TEAM: Olympiacos) - STATS: PTS: 0, REB: 0, AST: 0, STL: 0, TO: 0, PIR: 0, 2FG: 0/0 (0.0%), 3FG: 0/0 (0.0%), FT: 0/0 (0.0%), MIN: 00:00
 PLAYER: D. Hall (TEAM: Olympiacos) - STATS: PTS: 2, REB: 3 (O: 1, D: 2), AST: 2, STL: 0, TO: 1, PIR: 5, 2FG: 0/1 (0.0%), 3FG: 0/0 (0.0%), FT: 2/4 (50.0%), MIN: 14:32
 PLAYER: E. Fournier (TEAM: Olympiacos) - STATS: PTS: 13, REB: 3 (O: 1, D: 2), AST: 4, STL: 1, TO: 1, PIR: 8, 2FG: 1/2 (50.0%), 3FG: 3/9 (33.3%), FT: 2/2 (100.0%), MIN: 16:36
 

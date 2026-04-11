@@ -9,3 +9,5 @@ cd YOUR_REPO_NAME
 pip install -r requirements.txt
 Download Mistral gguf model: TheBloke/Mistral-7B-Instruct-v0.2-GGUF
 compilation: python main.py
+
+Activation command : agent_project_venv\Scripts\activate
