@@ -92,7 +92,7 @@ def setup_rag_index(rebuild=False):
 
 def load_local_llm():
     if not os.path.exists(GGUF_MODEL_PATH):
-        print(f"❌ Model not found at {GGUF_MODEL_PATH}")
+        print(f"❌ Model nott found at {GGUF_MODEL_PATH}")
         return None
 
     print(f"--- Loading model on {DEVICE} ---")
