@@ -1,6 +1,5 @@
 Rag agent 
-Local retrieval-augmented generatrion agent capable of summarizing articles and providing stats from .txt files using llama.cpp and a simulation of Mistral 7B model
-
+Local retrieval-augmented generatrion agent capable of summarizing articles and providing stats from .txt and .csv files using gemini flash-lite
 Clone the repository:
 ```bash
 git clone [https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git)
