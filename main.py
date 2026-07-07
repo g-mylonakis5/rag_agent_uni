@@ -1,35 +1,37 @@
-# 
-#  Hybrid RAG Agent (Journalist for Summaries & Strict Analyst for Stats)
+# Hybrid RAG & Advanced Conversational Agent
+# Developed for EuroLeague Analysis & LLM Agent Security Testing (RCE Exploit Bed)
 
 import os
 import torch
 import sys
 import shutil
+import csv
 from glob import glob 
-import multiprocessing
-#imports 
-from langchain_community.llms import LlamaCpp 
+
+# Third-party LangChain & Google GenAI Imports
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.document_loaders import TextLoader, CSVLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.messages import HumanMessage
 
-# Configuration
+# System Hardware & Vector DB Database Configuration
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-GGUF_MODEL_PATH = "Phi-3-mini-4k-instruct-Q4_K_M.gguf" 
 EMBEDDING_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
 CHROMA_PATH = './chroma_db'
 
-# Embeddings 
+# Initialize Text Embedding Model
 embeddings = HuggingFaceEmbeddings(
     model_name=EMBEDDING_MODEL_ID, 
     model_kwargs={'device': DEVICE}
 )
 
 def setup_rag_index(rebuild=False):
+    """Handles Vector Store indexing, document loading, and retriever configuration."""
     if rebuild and os.path.exists(CHROMA_PATH):
         print("Cleaning up old index...")
         shutil.rmtree(CHROMA_PATH)
@@ -43,7 +45,9 @@ def setup_rag_index(rebuild=False):
             'data/global_metadata'  
         ]
 
-        documents = []
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+        final_docs = []
+        
         for folder in data_folders:
             folder_path = os.path.join(os.getcwd(), folder)
             if not os.path.exists(folder_path):
@@ -53,168 +57,120 @@ def setup_rag_index(rebuild=False):
             
             for file_path in files:
                 try:
-                    # Declaring type based on file 
+                    # Append domain metadata context tags dynamically
                     if 'summaries' in folder:
-                        file_description = "detailed match narrative, game report, storytelling, and play-by-play summary"
+                        file_description = "NARRATIVE MATCH REPORT SUMMARY GAME HIGHLIGHTS STORYTELLING"
                     elif 'global_metadata' in folder:
-                        file_description = "arenas,stadiums,venues,locations, head coaches and general league information"
+                        file_description = "GLOBAL LEAGUE METADATA ARENAS COACHES STADIUMS"
                     elif 'box_scores' in folder:
-                        file_description = "match statistics boxscore"
+                        file_description = "STATISTICS BOXSCORE NUMBERS PLAYER STATS CSV"
                     else:
-                        file_description = "data"
+                        file_description = "DATA"
 
+                    # Differentiate loaders based on file extensions
                     if file_path.endswith('.csv'):
                         loader = CSVLoader(file_path=file_path, encoding='utf-8')
                     else:
                         loader = TextLoader(file_path=file_path, encoding='utf-8')
 
                     loaded_docs = loader.load()
-                    for doc in loaded_docs:
-                        filename = os.path.basename(file_path)
-                        # Adding right info to content 
-                        doc.page_content = f"Type: {file_description}\nContent: {doc.page_content}"
+                    match_name = os.path.basename(file_path).replace('.csv', '').replace('.txt', '').replace('_', ' ').title()
                     
-                    documents.extend(loaded_docs)
+                    # Embed system prompt metadata directly inside text page content
+                    for doc in loaded_docs:
+                        doc.metadata['source'] = doc.metadata.get('source', '').replace('\\', '/')
+                        doc.page_content = f"Team Matchup Context: {match_name}\nData Format: {file_description}\nInformation Content: {doc.page_content}"
+                    
+                    if file_path.endswith('.csv'):
+                        final_docs.extend(loaded_docs)
+                    else:
+                        splitted = text_splitter.split_documents(loaded_docs)
+                        final_docs.extend(splitted)
+
                     print(f" Loaded ({folder}): {os.path.basename(file_path)}")
                 except Exception as e:
                     print(f" Error loading {file_path}: {e}")
-                except Exception as e:
-                    print(f" Error loading {file_path}: {e}")
-        if not documents:
+                
+        if not final_docs:
             print(" No documents found!")
             return None
 
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1100, chunk_overlap=200)
-        docs = text_splitter.split_documents(documents)
-        
+        # Build and persist Chroma Vector DB store
         vectorstore = Chroma.from_documents(
-            documents=docs, 
+            documents=final_docs, 
             embedding=embeddings, 
             persist_directory=CHROMA_PATH
         )
+        vectorstore.persist()
         print(" Indexing complete.")
-        return vectorstore.as_retriever(
-            search_type="similarity", 
-            search_kwargs={"k": 4}
-        )
     
     else:
         print(" Loading existing index from disk...")
         vectorstore = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
-        return vectorstore.as_retriever(
-            search_type="similarity", #tried mmr but similarity is better 
-            search_kwargs={"k": 4}
-        )
-
-def load_local_llm():
-    if not os.path.exists(GGUF_MODEL_PATH):
-        print(f" Model not found at {GGUF_MODEL_PATH}")
-        return None
-
-    print(f"Loading model ")
-    
-    # Threads based on CPU
-    num_cores = multiprocessing.cpu_count()
-    cpu_threads = max(1, num_cores - 2) 
-    #LLamaCpp configuration
-    return LlamaCpp(
-        model_path=GGUF_MODEL_PATH,
-        temperature=0.01,
-        max_tokens=750,
-        n_ctx=2048,
-        n_gpu_layers=0,
-        n_batch=512,
-        n_threads=cpu_threads, 
-        repeat_penalty=1.15,
-        verbose=False
+        
+    # Configure MMR Retriever to maximize relevance diversity
+    retriever = vectorstore.as_retriever(
+        search_type="mmr", 
+        search_kwargs={
+            "k": 5,             
+            "fetch_k": 15,      
+            "lambda_mult": 0.5  
+        }
     )
+    return retriever
+
+def load_gemini_llm():
+    """Initializes the remote Generative AI model with structured inference boundaries."""
+    print("Connecting to Gemini API (gemini-3.1-flash-lite)...")
+    return ChatGoogleGenerativeAI(
+        model="gemini-3.1-flash-lite",
+        temperature=0.1,
+        max_tokens=1000,
+        disable_streaming=False
+    )
+
 def create_qa_chain(llm, retriever_obj):
+    """Assembles a standard RAG LCEL prompt-driven inference execution layout."""
     qa_template = (
-        "<|user|>\n"
         "You are a EuroLeague Master Analyst & Journalist. Use the provided Context to answer the question with absolute accuracy.\n\n"
-        
-        "###  MANDATORY RULES (DO NOT IGNORE):\n"
-        "1. **NO CITATIONS**: Never mention filenames like '.txt', '.csv', or '(source: ...)' in your text. Write like a professional news report.\n"
-        "2. **MATCH ISOLATION**: Identify the teams in the question. If the Context contains info about OTHER teams , DISCARD it. Only use data for the specific match requested.\n"
-        "3. **GEOGRAPHY & NAMES**: Use names EXACTLY as they appear in the Context. NEVER invent, combine, or add prefixes to names (e.g., if CSV says 'Sasha Vezenkov', do NOT write 'Aaron Vezenkov')."
-        "4. **PROFESSIONAL BALANCE**: For summaries, provide a solid narrative (1-2 paragraphs), BASED ON THE .TXT FILES. For specific questions (coaches, scores), be brief (1-2 sentences)."
-        
-                
-        "### INTENT MATCHING:\n"
-        "- If the user asks a SPECIFIC question (e.g., 'Who is the coach', 'What is the score'), answer ONLY that question  using the metadata or the stats.\n"
-        "- ONLY provide a 2-paragraph summary if the user explicitly asks for a 'summary', 'highlights', or 'what happened'.\n"
-        
-        "###  1. SUMMARIES & NARRATIVES (.txt files)\n"
-        "When asked for a 'summary' or 'what happened':\n"
-        "- **Storytelling**: Provide a detailed 2-paragraph narrative based on the '.txt' summary.\n"
-        "- **Key Events**: Include the final score, winner, scoring swings, and crucial plays in the final minute (e.g., misses, clutch shots), if available to you..\n\n"
-        
-        "###  2. PLAYER STATISTICS (.csv files)\n"
-        "When asked for stats or individual performance:\n"
-        "- **Full Boxscore**: Provide ALL stats from the '.csv' (PTS, REB, AST, 3FG, PIR, etc.).\n"
-        "- **Hybrid Comment**: \n"
-        "  * If the player is in the '.txt' narrative, link their stats to their actions (e.g., 'scored 12 points, including the game-tying shot').\n"
-        "  * If NOT in the '.txt', provide a journalistic comment on their efficiency based on the numbers.\n\n"
-        
-        "###  3. ARENAS & COACHES (global_metadata files)\n"
-        "- **Metadata Reference**: Always check 'global_metadata' for the correct head coaches and stadium names (e.g., 'Head coach of Olympiacos is Giorgos Bartzokas').\n\n"
-        
-        "**Strict Rule**: If information is missing from the Context, state you don't have enough data. Do NOT hallucinate.\n\n"
+        "### CRITICAL MANDATORY RULES:\n"
+        "1. **STRICT QUESTION FOCUS**: Answer only and precisely what the user is asking. If asked about capacity, location, arena, or coach, answer directly based on the context in one clean sentence. Do not add non-related facts.\n"
+        "2. **GAME SUMMARIES ONLY**: IF AND ONLY IF the user is asking for a match summary or game highlights, you MUST start your response with the final score (e.g., 'Final Score: Team A XX - XX Team B').\n"
+        "3. **GENERAL QUESTIONS & METADATA**: If the question is about a head coach, stadium, arena, capacity, or location, DO NOT include any final score line or match information. Jump straight into the direct plain answer.\n"
+        "4. **STRICT NO ASTERISKS RULE**: NEVER use asterisks (*) for bullet points or bold text anywhere. Output only clean, raw plain text sentences.\n"
+        "5. **NO CITATIONS**: Never mention filenames like '.txt', '.csv', or '(source: ...)'.\n\n"
         "Context:\n"
         "{context}\n\n"
-        "Question: {question}<|end|>\n"
-        "<|assistant|>"
+        "Question: {input}\n"
     )
-    QA_PROMPT = PromptTemplate(template=qa_template, input_variables=["context", "question"])
+    QA_PROMPT = PromptTemplate(template=qa_template, input_variables=["context", "input"])
 
-    condense_template = (
-    "<|user|>\n"
-    "You are an expert search query generator for a basketball RAG system. "
-    "Your goal is to create a single, optimized search query based on the Chat History and the Follow-up Question.\n\n"
-    
-    "### LOGIC RULES:\n"
-    "1. **Subject Switch**: If the follow-up question refers to a DIFFERENT match or team than the history, IGNORE all previous player names or specific stats from the history.\n"
-    "2. **Keyword Injection**: \n"
-    "- If the user asks for a 'summary', query MUST start with: 'detailed match narrative report summary'.\n"
-    "- If the user asks for 'stats', query MUST start with: 'player boxscore statistics csv'.\n"
-    "- If the user asks 'where' or 'location', query MUST include: 'arena stadium venue location'.\n"
-    "3. **Entity Extraction**: Always include the full names of the teams involved (e.g., 'Olympiacos', 'Panathinaikos').\n"
-    "4. **No Conversational Filler**: Output ONLY the search query. No 'Here is your query' or explanations.\n\n"
-    "  If the user asks 'where' or about a location, include keywords: 'arena stadium venue location'."
-    
-    "Chat History: {chat_history}\n"
-    "Follow-up Question: {question}<|end|>\n"
-    "<|assistant|>"
-)
-    CONDENSE_PROMPT = PromptTemplate(template=condense_template, input_variables=["chat_history", "question"])
-    #memory in conversation
-    memory = ConversationBufferWindowMemory(
-        k=2, 
-        memory_key="chat_history", 
-        return_messages=True, 
-        output_key='answer'
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+
+    # Modular modern LCEL chain composition
+    rag_chain = (
+        {"context": retriever_obj | format_docs, "input": RunnablePassthrough()}
+        | QA_PROMPT
+        | llm
+        | StrOutputParser()
     )
     
-    return ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=retriever_obj, 
-        memory=memory,
-        condense_question_prompt=CONDENSE_PROMPT,
-        combine_docs_chain_kwargs={"prompt": QA_PROMPT},
-        return_source_documents=True
-    )
+    return rag_chain
 
 if __name__ == "__main__":
+    chat_history_manual = []
     sys.stdout.reconfigure(line_buffering=True)
 
     print("\n" + "="*30)
     user_rebuild = input("Rebuild database? (y/n): ").strip().lower()
     rebuild_flag = True if user_rebuild == 'y' else False
 
+    # Agent system bootstrap execution
     retriever = setup_rag_index(rebuild=rebuild_flag)
     if not retriever: exit()
 
-    llm = load_local_llm()
+    llm = load_gemini_llm()
     if not llm: exit()
 
     qa_agent = create_qa_chain(llm, retriever)
@@ -228,12 +184,166 @@ if __name__ == "__main__":
         if user_input.lower() in ['exit', 'quit']: break
         
         print("Thinking...")
-        try:
-            result = qa_agent.invoke({"question": user_input})
-            answer = result['answer'].strip()
-            print(f"\n\n{answer}")
-            
-            sources = [os.path.basename(doc.metadata.get('source', '')) for doc in result['source_documents']]
-            print(f"\n[Sources Used]: {list(set(sources))}")
-        except Exception as e:
-            print(f"\nError: {e}")
+        
+        stats_keywords = ['best player', 'highest pir', 'total points', 'average', 'καλυτερος παικτης', 'καλύτερος παίκτης', 'σκορερ', 'στατιστικα σε ολα', 'scorer', 'best scorer', 'points per game', 'points', 'statline', 'stats']
+        
+       
+        # --- ROUTE A: NATIVE CODE-DRIVEN RAG (BOX SCORE ANALYST ENGINE) ----------
+        
+        if any(keyword in user_input.lower() for keyword in stats_keywords):
+            try:
+                # 1. Clean query input tokens to isolate explicit target names
+                clean_input = user_input.lower()
+                
+                # Filter out registered team tokens from query
+                teams_list = ['olympiacos', 'panathinaikos', 'real', 'partizan', 'bayern', 'dubai', 'barcelona', 'barca', 'zvezda', 'maccabi', 'paris', 'armani', 'baskonia', 'valencia','efes','virtus','asvel','zalgiris','hapoel','monaco','fenerbahce']
+                found_teams = [t for t in teams_list if t in clean_input]
+                found_teams = ['barcelona' if t == 'barca' else t for t in found_teams]
+                
+                # Strip out questions phrases and structural padding text
+                for word in stats_keywords + teams_list + ['game', 'match', 'in', 'the', 'what', 'were', 'stats', 'statline', 'player', 'for', 'of', '?', "'s"]:
+                    clean_input = clean_input.replace(word, " ")
+                
+                # Collect remaining query string elements (e.g., ['vezenkov'])
+                player_words = [w.strip() for w in clean_input.split() if len(w.strip()) > 2]
+
+                # Resolve runtime file paths natively to circumvent environment boundaries
+                box_scores_dir = os.path.abspath(os.path.join(os.getcwd(), 'data', 'box_scores'))
+                csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
+                
+                print(f"\n[DEBUG]: Ψάχνω αρχεία στο: {box_scores_dir}")
+                print(f"[DEBUG]: Βρέθηκαν {len(csv_files)} αρχεία CSV.")
+                
+                raw_data_output = ""
+                
+                # 2. Iterate and scan structural spreadsheet data directly
+                for file_path in csv_files:
+                    filename = os.path.basename(file_path).lower()
+                    
+                    # Validate if current dataset matches context constraints
+                    match_file = True
+                    if found_teams:
+                        if not all(team in filename for team in found_teams):
+                            match_file = False
+                            
+                    if match_file:
+                        with open(file_path, mode='r', encoding='utf-8') as f:
+                            reader = csv.DictReader(f)
+                            for row in reader:
+                                player_name_in_row = row.get('Player', '').lower()
+                                
+                                # Evaluate fuzzy text containment condition matches
+                                match_player = False
+                                if player_words:
+                                    if any(word in player_name_in_row for word in player_words):
+                                        match_player = True
+                                else:
+                                    match_player = True # Default fallback fallback if player unstated
+                                
+                                if match_player:
+                                    raw_data_output += f"Match: {row.get('Match')}, Team: {row.get('Team')}, Player: {row.get('Player')}, MIN: {row.get('MIN')}, PTS: {row.get('PTS')}, 2FG: {row.get('2FG')}, 3FG: {row.get('3FG')}, FT: {row.get('FT')}, REB: {row.get('REB')}, AST: {row.get('AST')}, STL: {row.get('STL')}, TO: {row.get('TO')}, PIR: {row.get('PIR')}\n"
+
+                # 3. Refine compiled textual rows using the generative AI instance
+                if not raw_data_output.strip():
+                    print("\nCould not find specific statistics for this query. Please check data files.")
+                else:
+                    refine_prompt = (
+                        f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n\n"
+                        f"Raw Statistics:\n{raw_data_output}"
+                    )
+                    refine_chain = llm | StrOutputParser()
+                    final_speech = refine_chain.invoke([HumanMessage(content=refine_prompt)])
+                    print(f"\n\n{final_speech.strip()}")
+            except Exception as e:
+                print(f"\nTool Error: {e}")
+                
+      
+        # --- ROUTE B: UNIFIED CONVERSATIONAL RAG (NARRATIVE GRAPH PATH) ----------
+        
+        else:
+            try:
+                user_input_clean = user_input.lower()
+                
+                # 1. Compress conversational history tokens to expand contextual query
+                history_str = "\n".join(chat_history_manual[-4:])
+                
+                query_generation_prompt = (
+                    f"You are an expert search query optimizer for a EuroLeague RAG system.\n"
+                    f"Analyze the Chat History and the User's current Input. Generate a single, highly optimized standalone search query that resolves pronouns and fixes spelling.\n"
+                    f"Example: If history is about 'Olympiacos' and Input is 'what is the capacity?', output: 'Olympiacos arena stadium capacity'.\n"
+                    f"Example 2: If Input is 'Barca', output: 'FC Barcelona basketball arena coach stadium metadata'.\n\n"
+                    f"Chat History:\n{history_str}\n\n"
+                    f"User Input: {user_input}\n"
+                    f"Output ONLY the raw optimized keywords. No quotes, no explanations."
+                )
+                
+                query_chain = llm | StrOutputParser()
+                optimized_query = query_chain.invoke([HumanMessage(content=query_generation_prompt)]).strip()
+                
+                if not optimized_query: optimized_query = user_input
+
+                # 2. Extract specific matchup attributes to enforce direct cache file routing
+                teams_list = ['olympiacos', 'panathinaikos', 'real', 'partizan', 'bayern', 'dubai', 'barcelona', 'barca', 'zvezda', 'maccabi', 'paris', 'armani', 'baskonia', 'valencia','efes','virtus','asvel','zalgiris','hapoel','monaco','fenerbahce']
+                
+                found_teams_with_positions = []
+                for team in teams_list:
+                    pos = user_input_clean.find(team)
+                    if pos != -1:
+                        actual_team_name = 'barcelona' if team == 'barca' else team
+                        found_teams_with_positions.append((pos, actual_team_name))
+                
+                found_teams_with_positions.sort()
+                mentioned_teams = [team_name for _, team_name in found_teams_with_positions]
+                mentioned_teams = list(dict.fromkeys(mentioned_teams))
+
+                context_content = ""
+                source_file_used = "ChromaDB Optimized Search"
+                
+                # Matchup routing override to bypass vector index noise on direct summaries
+                if len(mentioned_teams) == 2 and any(w in user_input_clean for w in ['summary', 'summarize', 'game', 'match', 'score', 'result']):
+                    home_team = mentioned_teams[0]
+                    away_team = mentioned_teams[1]
+                    expected_filename = f"{home_team}_{away_team}.txt"
+                    target_path = os.path.join("data", "summaries", expected_filename)
+                    
+                    if not os.path.exists(target_path):
+                        expected_filename = f"{away_team}_{home_team}.txt"
+                        target_path = os.path.join("data", "summaries", expected_filename)
+                        
+                    if os.path.exists(target_path):
+                        with open(target_path, "r", encoding="utf-8") as f:
+                            context_content = f.read()
+                        source_file_used = expected_filename
+                
+                # 3. Standard Vector Embeddings retrieval fallback path
+                if not context_content:
+                    source_documents = retriever.invoke(optimized_query)
+                    context_content = "\n\n".join([doc.page_content for doc in source_documents])
+                    if source_documents:
+                        source_file_used = ", ".join(list(set([os.path.basename(doc.metadata.get('source', '')) for doc in source_documents])))
+
+                # 4. Synthesize finalized plain text output and keep memory array fresh
+                qa_prompt = (
+                    f"You are a EuroLeague Master Analyst & Journalist. Use the provided Context and Chat History to answer the user's Question with absolute accuracy.\n\n"
+                    f"### CRITICAL MANDATORY RULES:\n"
+                    f"1. **STRICT QUESTION FOCUS**: Answer only and precisely what the user is asking. If asked about a coach or stadium, give only that in one plain text sentence.\n"
+                    f"2. **GAME SUMMARIES ONLY**: IF AND ONLY IF the user is asking for a match summary, start with the final score exactly as written in the context.\n"
+                    f"3. **GENERAL QUESTIONS & METADATA**: Do not include final scores for questions about arenas or coaches.\n"
+                    f"4. **STRICT NO ASTERISKS RULE**: NEVER use asterisks (*) anywhere. Output clean raw text.\n"
+                    f"5. **NO FILENAMES**: Do not mention filenames like '.txt' or '.csv'.\n\n"
+                    f"Chat History:\n{history_str}\n\n"
+                    f"Context:\n{context_content}\n\n"
+                    f"Question: {user_input}"
+                )
+                
+                qa_response_chain = llm | StrOutputParser()
+                answer = qa_response_chain.invoke([HumanMessage(content=qa_prompt)])
+                
+                print(f"\n\n{answer.strip()}")
+                print(f"\n[Sources Used]: ['{source_file_used}'] (Optimized Search Query: '{optimized_query}')")
+                
+                chat_history_manual.append(f"User: {user_input}")
+                chat_history_manual.append(f"Agent: {answer.strip()}")
+                
+            except Exception as e:
+                print(f"\nError: {e}")

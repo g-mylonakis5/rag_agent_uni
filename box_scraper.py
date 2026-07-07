@@ -16,8 +16,6 @@ def format_name(full_name):
 def scrape_basketball_reference(url, output_name):
     print(f" Opening browser for: {url}")
     
-    #
-    # Example = real_olympiacos -> Real = 'Home', Olympiacos = 'Away'
     try:
         name_parts = output_name.split("_")
         home_team_name = name_parts[0].capitalize() 
@@ -48,7 +46,6 @@ def scrape_basketball_reference(url, output_name):
             # Check if table contains stats 
             if 'MP' in df.columns and 'PTS' in df.columns:
                 
-                
                 team_label = away_team_name if team_count == 0 else home_team_name
                 
                 df = df.dropna(subset=['Player'])
@@ -74,7 +71,7 @@ def scrape_basketball_reference(url, output_name):
                         pir = (pts + trb + ast + stl + blk) - (missed_fg + missed_ft + tov + pf)
 
                         all_players.append({
-                            "Match": f"{home_team_name} vs {away_team_name}", # Νέο πεδίο για extra context[cite: 2]
+                            "Match": f"{home_team_name} vs {away_team_name}", 
                             "Team": team_label, 
                             "Player": format_name(row['Player']),
                             "MIN": row['MP'],
@@ -97,7 +94,7 @@ def scrape_basketball_reference(url, output_name):
             final_df = pd.DataFrame(all_players)
             os.makedirs("data/box_scores", exist_ok=True)
             final_df.to_csv(f"data/box_scores/{output_name}.csv", index=False)
-            print(f"File {output_name}.csv created.")
+            print(f"File {output_name}.csv created successfully.")
         else:
             print("No data found.")
 
@@ -118,19 +115,41 @@ if __name__ == "__main__":
         "olympiacos_hapoel": "https://www.basketball-reference.com/international/boxscores/2025-10-31-olympiakos.html",
         "olympiacos_partizan": "https://www.basketball-reference.com/international/boxscores/2025-11-07-olympiakos.html",
         "olympiacos_zalgiris": "https://www.basketball-reference.com/international/boxscores/2025-11-12-olympiakos.html",
-        "milano_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-11-14-milano.html",
+        "armani_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-11-14-milano.html",
         "olympiacos_paris": "https://www.basketball-reference.com/international/boxscores/2025-11-21-olympiakos.html",
         "zvezda_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-11-26-red-star.html",
         "barcelona_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-12-12-barcelona.html",
+        "olympiacos_valencia": "https://www.basketball-reference.com/international/boxscores/2025-12-16-olympiakos.html",
+        "olympiacos_asvel": "https://www.basketball-reference.com/international/boxscores/2025-12-19-olympiakos.html",
+        "virtus_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-12-26-virtus-bologna.html",
         "panathinaikos_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-01-02-panathinaikos.html",
+        "fenerbahce_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-01-06-ulker-fenerbahce.html",
+        "olympiacos_bayern": "https://www.basketball-reference.com/international/boxscores/2026-01-09-olympiakos.html",
+        "partizan_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-01-16-partizan.html",
+        "olympiacos_maccabi": "https://www.basketball-reference.com/international/boxscores/2026-01-20-olympiakos.html",
+        "efes_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-01-22-anadolu-efes.html",
+        "olympiacos_barcelona": "https://www.basketball-reference.com/international/boxscores/2026-01-29-olympiakos.html",
+        "dubai_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-02-03-dubai.html",
+        "olympiacos_virtus": "https://www.basketball-reference.com/international/boxscores/2026-02-06-olympiakos.html",
+        "olympiacos_zvezda": "https://www.basketball-reference.com/international/boxscores/2026-02-12-olympiakos.html",
+        "zalgiris_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-02-25-zalgiris.html",
+        "olympiacos_panathinaikos": "https://www.basketball-reference.com/international/boxscores/2026-03-06-olympiakos.html",
+        "monaco_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-03-13-monaco.html",
+        "olympiacos_fenerbahce": "https://www.basketball-reference.com/international/boxscores/2026-03-17-olympiakos.html",
+        "olympiacos_baskonia": "https://www.basketball-reference.com/international/boxscores/2026-03-19-olympiakos.html",
+        "valencia_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-03-24-valencia.html",
+        "paris_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-03-26-paris-basket.html",
+        "asvel_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-04-03-villeurbanne.html",
+        "olympiacos_real": "https://www.basketball-reference.com/international/boxscores/2026-04-07-olympiakos.html",
+        "hapoel_olympiacos": "https://www.basketball-reference.com/international/boxscores/2026-04-09-hapoel-tel-aviv.html",
+        "olympiacos_armani": "https://www.basketball-reference.com/international/boxscores/2026-04-16-olympiakos.html"
     }
 
-    print(f"Starting scraping for  {len(games_to_scrape)} matches.")
+    print(f"Starting scraping for {len(games_to_scrape)} matches.")
 
     for file_name, url in games_to_scrape.items():
-        
         scrape_basketball_reference(url, file_name)
-        print("Waiting for IP protection")
+        print("Waiting for IP protection...")
         time.sleep(12) 
 
-    print("✅ Box score scraping complete.")
+    print(" Box score scraping complete.")

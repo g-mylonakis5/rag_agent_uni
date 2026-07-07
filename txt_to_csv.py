@@ -7,7 +7,7 @@ def convert_all_boxes_to_csv(directory):
     files = glob(os.path.join(directory, "*_box.txt"))
     headers = ['Name', 'Team', 'PTS', 'REB', 'AST', 'STL', 'TO', 'PIR', '2FG', '3FG', 'FT', 'MIN']
     
-    # Νέο, πιο ευέλικτο pattern που επιτρέπει κείμενο/παρενθέσεις ενδιάμεσα
+    
     pattern = (
         r"PLAYER:\s*(.*?)\s*\(TEAM:\s*(.*?)\)\s*-\s*STATS:\s*"
         r"PTS:\s*(\d+).*?REB:\s*(\d+).*?AST:\s*(\d+).*?"
@@ -21,7 +21,7 @@ def convert_all_boxes_to_csv(directory):
         
         with open(txt_path, 'r', encoding='utf-8') as f:
             for line in f:
-                # Καθαρίζουμε τη γραμμή από περιττά κενά
+                
                 line = line.strip()
                 match = re.search(pattern, line, re.IGNORECASE)
                 if match:
@@ -34,6 +34,6 @@ def convert_all_boxes_to_csv(directory):
                 writer = csv.writer(f)
                 writer.writerow(headers)
                 writer.writerows(rows)
-            print(f"✅ Μετατράπηκε με επιτυχία: {os.path.basename(txt_path)} ({len(rows)} παίκτες)")
+            print(f" Μετατράπηκε με επιτυχία: {os.path.basename(txt_path)} ({len(rows)} παίκτες)")
 
 convert_all_boxes_to_csv('basketball_articles')
