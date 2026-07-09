@@ -188,23 +188,34 @@ if __name__ == "__main__":
         stats_keywords = ['best player', 'highest pir', 'total points', 'average', 'καλυτερος παικτης', 'καλύτερος παίκτης', 'σκορερ', 'στατιστικα σε ολα', 'scorer', 'best scorer', 'points per game', 'points', 'statline', 'stats']
         
        
-        # --- ROUTE A: NATIVE CODE-DRIVEN RAG (BOX SCORE ANALYST ENGINE) ----------
+       # --- ROUTE A: NATIVE CODE-DRIVEN RAG (BOX SCORE ANALYST ENGINE) ----------
         
         if any(keyword in user_input.lower() for keyword in stats_keywords):
             try:
                 # 1. Clean query input tokens to isolate explicit target names
                 clean_input = user_input.lower()
+                user_input_clean = user_input.lower()
                 
                 # Filter out registered team tokens from query
                 teams_list = ['olympiacos', 'panathinaikos', 'real', 'partizan', 'bayern', 'dubai', 'barcelona', 'barca', 'zvezda', 'maccabi', 'paris', 'armani', 'baskonia', 'valencia','efes','virtus','asvel','zalgiris','hapoel','monaco','fenerbahce']
-                found_teams = [t for t in teams_list if t in clean_input]
-                found_teams = ['barcelona' if t == 'barca' else t for t in found_teams]
+                
+                # Find teams and maintain their structural appearance order (Home vs Away)
+                found_teams_with_positions = []
+                for team in teams_list:
+                    pos = user_input_clean.find(team)
+                    if pos != -1:
+                        actual_team_name = 'barcelona' if team == 'barca' else team
+                        found_teams_with_positions.append((pos, actual_team_name))
+                
+                found_teams_with_positions.sort()
+                found_teams = [team_name for _, team_name in found_teams_with_positions]
+                found_teams = list(dict.fromkeys(found_teams)) # Remove potential duplicates
                 
                 # Strip out questions phrases and structural padding text
                 for word in stats_keywords + teams_list + ['game', 'match', 'in', 'the', 'what', 'were', 'stats', 'statline', 'player', 'for', 'of', '?', "'s"]:
                     clean_input = clean_input.replace(word, " ")
                 
-                # Collect remaining query string elements (e.g., ['vezenkov'])
+                # Collect remaining query string elements (e.g., ['fournier'])
                 player_words = [w.strip() for w in clean_input.split() if len(w.strip()) > 2]
 
                 # Resolve runtime file paths natively to circumvent environment boundaries
@@ -212,21 +223,33 @@ if __name__ == "__main__":
                 csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
                 
                 print(f"\n[DEBUG]: Ψάχνω αρχεία στο: {box_scores_dir}")
-                print(f"[DEBUG]: Βρέθηκαν {len(csv_files)} αρχεία CSV.")
                 
                 raw_data_output = ""
                 
+                # Determine strict file filtering based on how many teams were extracted
+                target_specific_file = None
+                if len(found_teams) == 2:
+                    # Enforce strict Home_Away order match to isolate a single game file
+                    target_specific_file = f"{found_teams[0]}_{found_teams[1]}.csv"
+                
                 # 2. Iterate and scan structural spreadsheet data directly
+                matched_files_count = 0
                 for file_path in csv_files:
                     filename = os.path.basename(file_path).lower()
+                    match_file = False
                     
-                    # Validate if current dataset matches context constraints
-                    match_file = True
-                    if found_teams:
-                        if not all(team in filename for team in found_teams):
-                            match_file = False
+                    if target_specific_file:
+                        if filename == target_specific_file:
+                            match_file = True
+                    else:
+                        if found_teams:
+                            if any(team in filename for team in found_teams):
+                                match_file = True
+                        else:
+                            match_file = True # Fallback if no teams stated at all
                             
                     if match_file:
+                        matched_files_count += 1
                         with open(file_path, mode='r', encoding='utf-8') as f:
                             reader = csv.DictReader(f)
                             for row in reader:
@@ -238,17 +261,20 @@ if __name__ == "__main__":
                                     if any(word in player_name_in_row for word in player_words):
                                         match_player = True
                                 else:
-                                    match_player = True # Default fallback fallback if player unstated
+                                    match_player = True # Default fallback if player unstated
                                 
                                 if match_player:
                                     raw_data_output += f"Match: {row.get('Match')}, Team: {row.get('Team')}, Player: {row.get('Player')}, MIN: {row.get('MIN')}, PTS: {row.get('PTS')}, 2FG: {row.get('2FG')}, 3FG: {row.get('3FG')}, FT: {row.get('FT')}, REB: {row.get('REB')}, AST: {row.get('AST')}, STL: {row.get('STL')}, TO: {row.get('TO')}, PIR: {row.get('PIR')}\n"
+
+                print(f"[DEBUG]: Σκαναρίστηκαν {matched_files_count} αρχεία CSV βάσει των κριτηρίων.")
 
                 # 3. Refine compiled textual rows using the generative AI instance
                 if not raw_data_output.strip():
                     print("\nCould not find specific statistics for this query. Please check data files.")
                 else:
                     refine_prompt = (
-                        f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n\n"
+                        f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n"
+                        f"CRITICAL: Focus ONLY on the requested matchup and do not mix up separate games.\n\n"
                         f"Raw Statistics:\n{raw_data_output}"
                     )
                     refine_chain = llm | StrOutputParser()
