@@ -3,5 +3,5 @@ __pycache__/
 .env
 chroma_db/
 *.gguf
-agent_project_ven/
+agent_project_venv/
 llm_project_venv/
