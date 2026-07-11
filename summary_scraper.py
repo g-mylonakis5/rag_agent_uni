@@ -6,10 +6,23 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from newspaper import Article
 
+# Import the Agent database manager for automated ChromaDB rebuilds
+try:
+    from main import setup_rag_index
+    HAS_AGENT_LINK = True
+except ImportError:
+    HAS_AGENT_LINK = False
+
 def scrape_eurohoops_summary(url, output_name):
     """
     Opens the link, removes extra noise and scrapes the summary text 
     """
+    # SMART CHECK: Skip execution immediately if the target TXT already exists on disk
+    target_file = f"data/summaries/{output_name}.txt"
+    if os.path.exists(target_file):
+        print(f" [SKIP]: File {output_name}.txt already exists. Skipping extraction.")
+        return False # Returns False since no new narrative data was fetched
+
     print(f" Beginning text collection from: {url}")
     
     chrome_options = Options()
@@ -57,16 +70,18 @@ def scrape_eurohoops_summary(url, output_name):
 
         if clean_text:
             os.makedirs("data/summaries", exist_ok=True)
-            file_path = f"data/summaries/{output_name}.txt"
-            with open(file_path, "w", encoding="utf-8") as f:
+            with open(target_file, "w", encoding="utf-8") as f:
                 f.write(clean_text)
             
-            print(f"Summary saved in: {file_path}")
+            print(f"Summary saved in: {target_file}")
+            return True # Returns True indicating a new text file was successfully stored
         else:
             print(f"No text found in {url}")
+            return False
 
     except Exception as e:
         print(f" Error scraping {output_name}: {e}")
+        return False
     finally:
         driver.quit()
 
@@ -108,15 +123,24 @@ if __name__ == "__main__":
         "olympiacos_armani": "https://www.eurohoops.net/en/euroleague/1956712/olympiacos-crushed-milano-and-secured-the-top-spot-in-euroleague/"
     }
 
-    print(f" Starting collection of {len(summaries_to_collect)} summaries.")
+    print(f" Starting check for {len(summaries_to_collect)} summaries.")
+
+    new_data_added = False
 
     for file_name, url in summaries_to_collect.items():
-        
-        if os.path.exists(f"data/summaries/{file_name}.txt"):
-            os.remove(f"data/summaries/{file_name}.txt")
-            
-        scrape_eurohoops_summary(url, file_name)
-        print("Waiting 10 seconds for IP protection...")
-        time.sleep(10)
+        was_scraped = scrape_eurohoops_summary(url, file_name)
+        # Flip the flag to True if at least one new text summary is fetched
+        if was_scraped:
+            new_data_added = True
+            print("Waiting 10 seconds for IP protection...")
+            time.sleep(10)
 
     print("Scraping completed.")
+
+    # AUTO-REBUILD: Trigger an index refresh only if new summaries were actually fetched
+    if new_data_added and HAS_AGENT_LINK:
+        print("\n New match summaries detected! Rebuilding Agent Vector Database...")
+        setup_rag_index(rebuild=True)
+        print(" Agent Database updated successfully with new summaries!")
+    elif HAS_AGENT_LINK:
+        print("\n Database up to date. No rebuild required.")

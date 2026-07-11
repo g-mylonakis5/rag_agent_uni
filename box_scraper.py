@@ -6,14 +6,27 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Import the Agent database manager for automated ChromaDB rebuilds
+try:
+    from main import setup_rag_index
+    HAS_AGENT_LINK = True
+except ImportError:
+    HAS_AGENT_LINK = False
+
 def format_name(full_name):
-    """Name conversions """
+    """Converts full player names into standard initial format (e.g., 'S. Vezenkov')."""
     parts = full_name.split()
     if len(parts) >= 2:
         return f"{parts[0][0]}. {parts[-1]}"
     return full_name
 
 def scrape_basketball_reference(url, output_name):
+    # SMART CHECK: Skip execution immediately if the target CSV already exists on disk
+    target_file = f"data/box_scores/{output_name}.csv"
+    if os.path.exists(target_file):
+        print(f" [SKIP]: File {output_name}.csv already exists. Skipping extraction.")
+        return False # Returns False since no new data was fetched
+
     print(f" Opening browser for: {url}")
     
     try:
@@ -43,7 +56,7 @@ def scrape_basketball_reference(url, output_name):
         team_count = 0 
 
         for df in tables:
-            # Check if table contains stats 
+            # Validate if the parsed table contains standard box score statistical columns
             if 'MP' in df.columns and 'PTS' in df.columns:
                 
                 team_label = away_team_name if team_count == 0 else home_team_name
@@ -53,7 +66,7 @@ def scrape_basketball_reference(url, output_name):
                 
                 for _, row in df.iterrows():
                     try:
-                        # Conversion to numbers and calculating Performance Index rating 
+                        # Cast raw string metrics to integers and calculate Performance Index Rating (PIR)
                         pts = int(row['PTS'])
                         trb = int(row['TRB'])
                         ast = int(row['AST'])
@@ -93,17 +106,21 @@ def scrape_basketball_reference(url, output_name):
         if all_players:
             final_df = pd.DataFrame(all_players)
             os.makedirs("data/box_scores", exist_ok=True)
-            final_df.to_csv(f"data/box_scores/{output_name}.csv", index=False)
+            final_df.to_csv(target_file, index=False)
             print(f"File {output_name}.csv created successfully.")
+            return True # Returns True indicating new spreadsheet data was successfully stored
         else:
             print("No data found.")
+            return False
 
     except Exception as e:
         print(f"Selenium error: {e}")
+        return False
     finally:
         driver.quit()
 
 if __name__ == "__main__":
+    # Core target dataset collection mappings
     games_to_scrape = {
         "baskonia_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-09-30-vitoria.html",
         "real_olympiacos": "https://www.basketball-reference.com/international/boxscores/2025-10-02-real-madrid.html",
@@ -145,11 +162,24 @@ if __name__ == "__main__":
         "olympiacos_armani": "https://www.basketball-reference.com/international/boxscores/2026-04-16-olympiakos.html"
     }
 
-    print(f"Starting scraping for {len(games_to_scrape)} matches.")
+    print(f"Starting scraping check for {len(games_to_scrape)} matches.")
+    
+    new_data_added = False
 
     for file_name, url in games_to_scrape.items():
-        scrape_basketball_reference(url, file_name)
-        print("Waiting for IP protection...")
-        time.sleep(12) 
+        was_scraped = scrape_basketball_reference(url, file_name)
+        # Flip the flag to True if at least one new file is downloaded
+        if was_scraped:
+            new_data_added = True
+            print("Waiting for IP protection...")
+            time.sleep(12) 
 
-    print(" Box score scraping complete.")
+    print(" Box score check complete.")
+
+    # AUTO-REBUILD: Trigger an index refresh only if new matches were actually fetched
+    if new_data_added and HAS_AGENT_LINK:
+        print("\n New match data detected! Rebuilding Agent Vector Database...")
+        setup_rag_index(rebuild=True)
+        print(" Agent Database updated successfully with new box scores!")
+    elif HAS_AGENT_LINK:
+        print("\n Database up to date. No rebuild required.")

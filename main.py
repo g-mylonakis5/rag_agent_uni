@@ -211,25 +211,45 @@ if __name__ == "__main__":
                 found_teams = [team_name for _, team_name in found_teams_with_positions]
                 found_teams = list(dict.fromkeys(found_teams)) # Remove potential duplicates
                 
+                # Stop words that should NEVER be considered player names
+                stop_words = ['how', 'many', 'did', 'can', 'give', 'you', 'the', 'for', 'his', 'him', 'stat', 'stats', 'statline', 'game', 'match', 'points', 'average', 'performance', 'with', 'and', 'και', 'με', 'points', 'who', 'what', 'team']
+                
                 # Strip out questions phrases and structural padding text
-                for word in stats_keywords + teams_list + ['game', 'match', 'in', 'the', 'what', 'were', 'stats', 'statline', 'player', 'for', 'of', '?', "'s"]:
+                for word in stats_keywords + teams_list + stop_words + ['?', "'s"]:
                     clean_input = clean_input.replace(word, " ")
                 
-                # Collect remaining query string elements (e.g., ['fournier'])
-                player_words = [w.strip() for w in clean_input.split() if len(w.strip()) > 2]
+                # Extract potential player names (filter words with length > 2 and not in stop words)
+                player_words = [w.strip() for w in clean_input.split() if len(w.strip()) > 2 and w.strip() not in stop_words]
 
-                # Resolve runtime file paths natively to circumvent environment boundaries
+                # --- CONTEXT MEMORY FALLBACK FOR PRONOUNS (e.g., "his stats") ---
+                if not player_words and 'his' in user_input.lower() and chat_history_manual:
+                    for hist in reversed(chat_history_manual):
+                        for word in hist.lower().split():
+                            clean_word = word.replace("'s", "").replace("?", "").strip()
+                            if len(clean_word) > 3 and clean_word not in teams_list and clean_word not in stats_keywords and clean_word not in stop_words and clean_word not in ['user:', 'agent:']:
+                                player_words = [clean_word]
+                                print(f"[DEBUG Memory]: Resolved 'his' to target player: '{clean_word}'")
+                                break
+                        if player_words: break
+
+                # Resolve runtime file paths natively
                 box_scores_dir = os.path.abspath(os.path.join(os.getcwd(), 'data', 'box_scores'))
                 csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
                 
                 print(f"\n[DEBUG]: Ψάχνω αρχεία στο: {box_scores_dir}")
                 
-                raw_data_output = ""
+                # Setup structures
+                player_profiles = {w: {"name": "", "pts": 0, "reb": 0, "ast": 0, "pir": 0, "games": 0} for w in player_words}
                 
+                raw_data_output = ""
+                total_points = 0
+                games_played = 0
+                player_full_name = ""
+                is_average_requested = any(w in user_input.lower() for w in ['average', 'ppg', 'μέσος όρος', 'μεσο ορο'])
+
                 # Determine strict file filtering based on how many teams were extracted
                 target_specific_file = None
                 if len(found_teams) == 2:
-                    # Enforce strict Home_Away order match to isolate a single game file
                     target_specific_file = f"{found_teams[0]}_{found_teams[1]}.csv"
                 
                 # 2. Iterate and scan structural spreadsheet data directly
@@ -246,7 +266,7 @@ if __name__ == "__main__":
                             if any(team in filename for team in found_teams):
                                 match_file = True
                         else:
-                            match_file = True # Fallback if no teams stated at all
+                            match_file = True
                             
                     if match_file:
                         matched_files_count += 1
@@ -255,31 +275,84 @@ if __name__ == "__main__":
                             for row in reader:
                                 player_name_in_row = row.get('Player', '').lower()
                                 
-                                # Evaluate fuzzy text containment condition matches
+                                # Populate data for any matching player keywords found
+                                for keyword in player_profiles:
+                                    if keyword in player_name_in_row:
+                                        p = player_profiles[keyword]
+                                        if not p["name"]:
+                                            p["name"] = row.get('Player', player_name_in_row.title())
+                                        p["pts"] += int(row.get('PTS', '0')) if row.get('PTS', '0').isdigit() else 0
+                                        p["reb"] += int(row.get('REB', '0')) if row.get('REB', '0').isdigit() else 0
+                                        p["ast"] += int(row.get('AST', '0')) if row.get('AST', '0').isdigit() else 0
+                                        p["pir"] += int(row.get('PIR', '0')) if row.get('PIR', '0').isdigit() else 0
+                                        p["games"] += 1
+
+                                # Also keep single player legacy path data fallback
                                 match_player = False
                                 if player_words:
                                     if any(word in player_name_in_row for word in player_words):
                                         match_player = True
                                 else:
-                                    match_player = True # Default fallback if player unstated
+                                    match_player = True
                                 
                                 if match_player:
-                                    raw_data_output += f"Match: {row.get('Match')}, Team: {row.get('Team')}, Player: {row.get('Player')}, MIN: {row.get('MIN')}, PTS: {row.get('PTS')}, 2FG: {row.get('2FG')}, 3FG: {row.get('3FG')}, FT: {row.get('FT')}, REB: {row.get('REB')}, AST: {row.get('AST')}, STL: {row.get('STL')}, TO: {row.get('TO')}, PIR: {row.get('PIR')}\n"
+                                    pts_str = row.get('PTS', '0')
+                                    try: pts_val = int(pts_str) if pts_str and pts_str.isdigit() else 0
+                                    except: pts_val = 0
+                                    total_points += pts_val
+                                    games_played += 1
+                                    player_full_name = row.get('Player', 'The player')
+                                    raw_data_output += f"Match: {row.get('Match')}, Team: {row.get('Team')}, Player: {row.get('Player')}, MIN: {row.get('MIN')}, PTS: {row.get('PTS')}, REB: {row.get('REB')}, AST: {row.get('AST')}, PIR: {row.get('PIR')}\n"
 
                 print(f"[DEBUG]: Σκαναρίστηκαν {matched_files_count} αρχεία CSV βάσει των κριτηρίων.")
 
-                # 3. Refine compiled textual rows using the generative AI instance
-                if not raw_data_output.strip():
-                    print("\nCould not find specific statistics for this query. Please check data files.")
-                else:
+                # Count how many players actually returned valid statistical profiles
+                valid_players = [p for p in player_profiles.values() if p["games"] > 0]
+                is_comparison = len(valid_players) >= 2
+
+                # 3. Refine compiled data structures using the generative AI instance
+                if is_comparison:
+                    comp_summary = "Comparison Statistical Data Summary:\n"
+                    for p in valid_players:
+                        comp_summary += f"- {p['name']}: {p['games']} games, Avg PTS: {round(p['pts']/p['games'], 1)}, Avg REB: {round(p['reb']/p['games'], 1)}, Avg AST: {round(p['ast']/p['games'], 1)}, Avg PIR: {round(p['pir']/p['games'], 1)}\n"
+                    
                     refine_prompt = (
-                        f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n"
-                        f"CRITICAL: Focus ONLY on the requested matchup and do not mix up separate games.\n\n"
-                        f"Raw Statistics:\n{raw_data_output}"
+                        f"You are an expert EuroLeague Head Scout and Journalist. Analyze the following calculated averages for these players:\n\n"
+                        f"{comp_summary}\n"
+                        f"Write a comprehensive, professional head-to-head comparison report in clean plain text sentences without asterisks or bold text. Contrast their strengths based on these exact numbers."
                     )
                     refine_chain = llm | StrOutputParser()
                     final_speech = refine_chain.invoke([HumanMessage(content=refine_prompt)])
                     print(f"\n\n{final_speech.strip()}")
+                    chat_history_manual.append(f"User: {user_input}")
+                    chat_history_manual.append(f"Agent: {final_speech.strip()}")
+                else:
+                    if not raw_data_output.strip():
+                        print("\nCould not find specific statistics for this query. Please check data files.")
+                    else:
+                        if is_average_requested and games_played > 0:
+                            # Use the specific filtered player full name if available from profiles
+                            display_name = valid_players[0]["name"] if valid_players else player_full_name
+                            actual_games = valid_players[0]["games"] if valid_players else games_played
+                            actual_total_pts = valid_players[0]["pts"] if valid_players else total_points
+                            calculated_avg = round(actual_total_pts / actual_games, 2)
+                            
+                            refine_prompt = (
+                                f"You are a professional sports journalist. Based on the calculated data, {display_name} has scored a total of {actual_total_pts} points across {actual_games} games, resulting in an average of {calculated_avg} points per game.\n"
+                                f"Convert this statistical fact into a smooth, natural plain text response sentence without asterisks or bold formatting."
+                            )
+                        else:
+                            refine_prompt = (
+                                f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n"
+                                f"CRITICAL: Focus ONLY on the requested matchup and do not mix up separate games.\n\n"
+                                f"Raw Statistics:\n{raw_data_output}"
+                            )
+                        
+                        refine_chain = llm | StrOutputParser()
+                        final_speech = refine_chain.invoke([HumanMessage(content=refine_prompt)])
+                        print(f"\n\n{final_speech.strip()}")
+                        chat_history_manual.append(f"User: {user_input}")
+                        chat_history_manual.append(f"Agent: {final_speech.strip()}")
             except Exception as e:
                 print(f"\nTool Error: {e}")
                 
