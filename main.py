@@ -236,7 +236,7 @@ if __name__ == "__main__":
                 box_scores_dir = os.path.abspath(os.path.join(os.getcwd(), 'data', 'box_scores'))
                 csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
                 
-                print(f"\n[DEBUG]: Ψάχνω αρχεία στο: {box_scores_dir}")
+                
                 
                 # Setup structures
                 player_profiles = {w: {"name": "", "pts": 0, "reb": 0, "ast": 0, "pir": 0, "games": 0} for w in player_words}
@@ -304,7 +304,7 @@ if __name__ == "__main__":
                                     player_full_name = row.get('Player', 'The player')
                                     raw_data_output += f"Match: {row.get('Match')}, Team: {row.get('Team')}, Player: {row.get('Player')}, MIN: {row.get('MIN')}, PTS: {row.get('PTS')}, REB: {row.get('REB')}, AST: {row.get('AST')}, PIR: {row.get('PIR')}\n"
 
-                print(f"[DEBUG]: Σκαναρίστηκαν {matched_files_count} αρχεία CSV βάσει των κριτηρίων.")
+              
 
                 # Count how many players actually returned valid statistical profiles
                 valid_players = [p for p in player_profiles.values() if p["games"] > 0]
