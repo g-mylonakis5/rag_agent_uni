@@ -79,7 +79,7 @@ def setup_rag_index(rebuild=False):
                     # Embed system prompt metadata directly inside text page content
                     for doc in loaded_docs:
                         doc.metadata['source'] = doc.metadata.get('source', '').replace('\\', '/')
-                        doc.page_content = f"Team Matchup Context: {match_name}\nData Format: {file_description}\nInformation Content: {doc.page_content}"
+                        doc.page_content = f"Team Matchup Context: {match_name}\nData Format: {file_description}\nInformation Context: {doc.page_content}"
                     
                     if file_path.endswith('.csv'):
                         final_docs.extend(loaded_docs)
@@ -122,9 +122,10 @@ def setup_rag_index(rebuild=False):
 def load_gemini_llm():
     """Initializes the remote Generative AI model with structured inference boundaries."""
     print("Connecting to Gemini API (gemini-3.1-flash-lite)...")
+    # HARDENED: Temperature set to 0.0 to prevent creative hallucinations in stats
     return ChatGoogleGenerativeAI(
         model="gemini-3.1-flash-lite",
-        temperature=0.1,
+        temperature=0.0,
         max_tokens=1000,
         disable_streaming=False
     )
@@ -211,8 +212,12 @@ if __name__ == "__main__":
                 found_teams = [team_name for _, team_name in found_teams_with_positions]
                 found_teams = list(dict.fromkeys(found_teams)) # Remove potential duplicates
                 
-                # Stop words that should NEVER be considered player names
-                stop_words = ['how', 'many', 'did', 'can', 'give', 'you', 'the', 'for', 'his', 'him', 'stat', 'stats', 'statline', 'game', 'match', 'points', 'average', 'performance', 'with', 'and', 'και', 'με', 'points', 'who', 'what', 'team']
+                # HARDENED: Expanded stop words to clean up comparison query metadata
+                stop_words = [
+                    'how', 'many', 'did', 'can', 'give', 'you', 'the', 'for', 'his', 'him', 'stat', 'stats', 'statline', 
+                    'game', 'match', 'points', 'average', 'averages', 'performance', 'with', 'and', 'και', 'με', 'points', 
+                    'who', 'what', 'team', 'compare', 'comparison', 'vs', 'versus', 'between'
+                ]
                 
                 # Strip out questions phrases and structural padding text
                 for word in stats_keywords + teams_list + stop_words + ['?', "'s"]:
@@ -235,8 +240,6 @@ if __name__ == "__main__":
                 # Resolve runtime file paths natively
                 box_scores_dir = os.path.abspath(os.path.join(os.getcwd(), 'data', 'box_scores'))
                 csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
-                
-                
                 
                 # Setup structures
                 player_profiles = {w: {"name": "", "pts": 0, "reb": 0, "ast": 0, "pir": 0, "games": 0} for w in player_words}
@@ -316,10 +319,18 @@ if __name__ == "__main__":
                     for p in valid_players:
                         comp_summary += f"- {p['name']}: {p['games']} games, Avg PTS: {round(p['pts']/p['games'], 1)}, Avg REB: {round(p['reb']/p['games'], 1)}, Avg AST: {round(p['ast']/p['games'], 1)}, Avg PIR: {round(p['pir']/p['games'], 1)}\n"
                     
+                    # HARDENED: Strict XML Guard System Prompt to prevent Entity Spills (e.g. Papanikolaou hallucination)
                     refine_prompt = (
-                        f"You are an expert EuroLeague Head Scout and Journalist. Analyze the following calculated averages for these players:\n\n"
-                        f"{comp_summary}\n"
-                        f"Write a comprehensive, professional head-to-head comparison report in clean plain text sentences without asterisks or bold text. Contrast their strengths based on these exact numbers."
+                        f"<SYSTEM_GUARDS>\n"
+                        f"You are an expert EuroLeague Head Scout and Journalist.\n"
+                        f"Analyze the following calculated averages for these players:\n\n"
+                        f"{comp_summary}\n\n"
+                        f"CRITICAL INSTRUCTIONS:\n"
+                        f"1. Compare ONLY the players listed in the summary above. If any other player's data is present in your internal memory or background knowledge, do NOT mention them.\n"
+                        f"2. Write a comprehensive, professional head-to-head comparison report in clean plain text sentences.\n"
+                        f"3. STRICTLY NO ASTERISKS (*) or bold markdown format anywhere in the response.\n"
+                        f"4. If data is completely missing for one of the targets, state that you cannot complete the comparison due to missing context.\n"
+                        f"</SYSTEM_GUARDS>"
                     )
                     refine_chain = llm | StrOutputParser()
                     final_speech = refine_chain.invoke([HumanMessage(content=refine_prompt)])
@@ -327,25 +338,29 @@ if __name__ == "__main__":
                     chat_history_manual.append(f"User: {user_input}")
                     chat_history_manual.append(f"Agent: {final_speech.strip()}")
                 else:
-                    if not raw_data_output.strip():
-                        print("\nCould not find specific statistics for this query. Please check data files.")
+                    # HARDENED: Missing context handler
+                    if not raw_data_output.strip() or not valid_players:
+                        print(f"\nNo statistics found in context for the requested player(s). Comparison/Analysis cannot be made.")
                     else:
                         if is_average_requested and games_played > 0:
-                            # Use the specific filtered player full name if available from profiles
                             display_name = valid_players[0]["name"] if valid_players else player_full_name
                             actual_games = valid_players[0]["games"] if valid_players else games_played
                             actual_total_pts = valid_players[0]["pts"] if valid_players else total_points
                             calculated_avg = round(actual_total_pts / actual_games, 2)
                             
                             refine_prompt = (
-                                f"You are a professional sports journalist. Based on the calculated data, {display_name} has scored a total of {actual_total_pts} points across {actual_games} games, resulting in an average of {calculated_avg} points per game.\n"
-                                f"Convert this statistical fact into a smooth, natural plain text response sentence without asterisks or bold formatting."
+                                f"<SYSTEM_GUARDS>\n"
+                                f"Based on the calculated data, {display_name} has scored a total of {actual_total_pts} points across {actual_games} games, resulting in an average of {calculated_avg} points per game.\n"
+                                f"Convert this statistical fact into a smooth, natural plain text response sentence. Do NOT use any asterisks (*) or bold formatting.\n"
+                                f"</SYSTEM_GUARDS>"
                             )
                         else:
                             refine_prompt = (
+                                f"<SYSTEM_GUARDS>\n"
                                 f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n"
                                 f"CRITICAL: Focus ONLY on the requested matchup and do not mix up separate games.\n\n"
-                                f"Raw Statistics:\n{raw_data_output}"
+                                f"Raw Statistics:\n{raw_data_output}\n"
+                                f"</SYSTEM_GUARDS>"
                             )
                         
                         refine_chain = llm | StrOutputParser()
@@ -422,7 +437,9 @@ if __name__ == "__main__":
                         source_file_used = ", ".join(list(set([os.path.basename(doc.metadata.get('source', '')) for doc in source_documents])))
 
                 # 4. Synthesize finalized plain text output and keep memory array fresh
+                # HARDENED: Unified XML Guards in conversational path to isolate data retrieval
                 qa_prompt = (
+                    f"<SYSTEM_GUARDS>\n"
                     f"You are a EuroLeague Master Analyst & Journalist. Use the provided Context and Chat History to answer the user's Question with absolute accuracy.\n\n"
                     f"### CRITICAL MANDATORY RULES:\n"
                     f"1. **STRICT QUESTION FOCUS**: Answer only and precisely what the user is asking. If asked about a coach or stadium, give only that in one plain text sentence.\n"
@@ -432,7 +449,8 @@ if __name__ == "__main__":
                     f"5. **NO FILENAMES**: Do not mention filenames like '.txt' or '.csv'.\n\n"
                     f"Chat History:\n{history_str}\n\n"
                     f"Context:\n{context_content}\n\n"
-                    f"Question: {user_input}"
+                    f"Question: {user_input}\n"
+                    f"</SYSTEM_GUARDS>"
                 )
                 
                 qa_response_chain = llm | StrOutputParser()
