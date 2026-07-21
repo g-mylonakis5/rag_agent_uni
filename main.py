@@ -79,7 +79,7 @@ def setup_rag_index(rebuild=False):
                     # Embed system prompt metadata directly inside text page content
                     for doc in loaded_docs:
                         doc.metadata['source'] = doc.metadata.get('source', '').replace('\\', '/')
-                        doc.page_content = f"Team Matchup Context: {match_name}\nData Format: {file_description}\nInformation Content: {doc.page_content}"
+                        doc.page_content = f"Team Matchup Context: {match_name}\nData Format: {file_description}\nInformation Context: {doc.page_content}"
                     
                     if file_path.endswith('.csv'):
                         final_docs.extend(loaded_docs)
@@ -185,21 +185,39 @@ if __name__ == "__main__":
         
         print("Thinking...")
         
-        stats_keywords = ['best player', 'highest pir', 'total points', 'average', 'καλυτερος παικτης', 'καλύτερος παίκτης', 'σκορερ', 'στατιστικα σε ολα', 'scorer', 'best scorer', 'points per game', 'points', 'statline', 'stats']
+        stats_keywords = ['best player', 'highest pir', 'total points', 'average', 'καλυτερος παικτης', 'καλύτερος παίκτης', 'σκορερ', 'στατιστικα σε ολα', 'scorer', 'best scorer', 'points per game', 'points', 'statline', 'stats', 'leading scorer']
         
-       
-       # --- ROUTE A: NATIVE CODE-DRIVEN RAG (BOX SCORE ANALYST ENGINE) ----------
+        # --- PRE-SCAN FOR EXPLICIT PLAYERS TO DETECT LOGICAL FALLBACKS ---
+        temp_input = user_input.lower()
+        teams_list = ['olympiacos', 'panathinaikos', 'real', 'partizan', 'bayern', 'dubai', 'barcelona', 'barca', 'zvezda', 'maccabi', 'paris', 'armani', 'baskonia', 'valencia','efes','virtus','asvel','zalgiris','hapoel','monaco','fenerbahce']
+        stop_words = [
+            'how', 'many', 'did', 'can', 'give', 'you', 'the', 'for', 'his', 'him', 'stat', 'stats', 'statline', 
+            'game', 'match', 'points', 'average', 'averages', 'performance', 'with', 'and', 'και', 'με', 'points', 
+            'who', 'what', 'team', 'compare', 'comparison', 'vs', 'versus', 'between', 'rebounds', 'assists', 'pir',
+            'best', 'player', 'highest', 'leading', 'scorer', 'leader', 'most'
+        ]
         
-        if any(keyword in user_input.lower() for keyword in stats_keywords):
+        for word in stats_keywords + teams_list + stop_words + ['?', "'s", "'"]:
+            temp_input = temp_input.replace(word, " ")
+        
+        # Isolate clean candidate names
+        potential_players = [w.strip() for w in temp_input.split() if len(w.strip()) > 2 and w.strip() not in stop_words]
+        
+        # Check if we have manual pronoun context to resolve
+        has_memory_player = False
+        if not potential_players and 'his' in user_input.lower() and chat_history_manual:
+            has_memory_player = True
+
+        # Decider: Run Route A ONLY if we have an explicit target player to analyze
+        run_route_a = any(keyword in user_input.lower() for keyword in stats_keywords) and (len(potential_players) > 0 or has_memory_player)
+
+        # --- ROUTE A: NATIVE CODE-DRIVEN RAG (BOX SCORE ANALYST ENGINE) ----------
+        
+        if run_route_a:
             try:
-                # 1. Clean query input tokens to isolate explicit target names
                 clean_input = user_input.lower()
                 user_input_clean = user_input.lower()
                 
-                # Filter out registered team tokens from query
-                teams_list = ['olympiacos', 'panathinaikos', 'real', 'partizan', 'bayern', 'dubai', 'barcelona', 'barca', 'zvezda', 'maccabi', 'paris', 'armani', 'baskonia', 'valencia','efes','virtus','asvel','zalgiris','hapoel','monaco','fenerbahce']
-                
-                # Find teams and maintain their structural appearance order (Home vs Away)
                 found_teams_with_positions = []
                 for team in teams_list:
                     pos = user_input_clean.find(team)
@@ -209,73 +227,53 @@ if __name__ == "__main__":
                 
                 found_teams_with_positions.sort()
                 found_teams = [team_name for _, team_name in found_teams_with_positions]
-                found_teams = list(dict.fromkeys(found_teams)) # Remove potential duplicates
+                found_teams = list(dict.fromkeys(found_teams))
                 
-                # Stop words that should NEVER be considered player names
-                stop_words = ['how', 'many', 'did', 'can', 'give', 'you', 'the', 'for', 'his', 'him', 'stat', 'stats', 'statline', 'game', 'match', 'points', 'average', 'performance', 'with', 'and', 'και', 'με', 'points', 'who', 'what', 'team']
-                
-                # Strip out questions phrases and structural padding text
-                for word in stats_keywords + teams_list + stop_words + ['?', "'s"]:
+                # Strip and sanitize punctuation (especially apostrophes like Peters')
+                clean_input = clean_input.replace("'s", " ").replace("'", " ")
+                for word in stats_keywords + teams_list + stop_words + ['?']:
                     clean_input = clean_input.replace(word, " ")
                 
-                # Extract potential player names (filter words with length > 2 and not in stop words)
                 player_words = [w.strip() for w in clean_input.split() if len(w.strip()) > 2 and w.strip() not in stop_words]
 
-                # --- CONTEXT MEMORY FALLBACK FOR PRONOUNS (e.g., "his stats") ---
                 if not player_words and 'his' in user_input.lower() and chat_history_manual:
                     for hist in reversed(chat_history_manual):
-                        for word in hist.lower().split():
-                            clean_word = word.replace("'s", "").replace("?", "").strip()
+                        for word in hist.lower().replace("'s", " ").replace("'", " ").split():
+                            clean_word = word.strip()
                             if len(clean_word) > 3 and clean_word not in teams_list and clean_word not in stats_keywords and clean_word not in stop_words and clean_word not in ['user:', 'agent:']:
                                 player_words = [clean_word]
-                                print(f"[DEBUG Memory]: Resolved 'his' to target player: '{clean_word}'")
                                 break
                         if player_words: break
 
-                # Resolve runtime file paths natively
                 box_scores_dir = os.path.abspath(os.path.join(os.getcwd(), 'data', 'box_scores'))
                 csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
                 
-                print(f"\n[DEBUG]: Ψάχνω αρχεία στο: {box_scores_dir}")
-                
-                # Setup structures
                 player_profiles = {w: {"name": "", "pts": 0, "reb": 0, "ast": 0, "pir": 0, "games": 0} for w in player_words}
-                
-                raw_data_output = ""
-                total_points = 0
-                games_played = 0
-                player_full_name = ""
-                is_average_requested = any(w in user_input.lower() for w in ['average', 'ppg', 'μέσος όρος', 'μεσο ορο'])
+                source_files_scanned = []
 
-                # Determine strict file filtering based on how many teams were extracted
                 target_specific_file = None
                 if len(found_teams) == 2:
                     target_specific_file = f"{found_teams[0]}_{found_teams[1]}.csv"
                 
-                # 2. Iterate and scan structural spreadsheet data directly
-                matched_files_count = 0
                 for file_path in csv_files:
                     filename = os.path.basename(file_path).lower()
                     match_file = False
                     
                     if target_specific_file:
-                        if filename == target_specific_file:
-                            match_file = True
+                        if filename == target_specific_file: match_file = True
                     else:
                         if found_teams:
-                            if any(team in filename for team in found_teams):
-                                match_file = True
+                            if any(team in filename for team in found_teams): match_file = True
                         else:
                             match_file = True
                             
                     if match_file:
-                        matched_files_count += 1
+                        source_files_scanned.append(filename)
                         with open(file_path, mode='r', encoding='utf-8') as f:
                             reader = csv.DictReader(f)
                             for row in reader:
                                 player_name_in_row = row.get('Player', '').lower()
                                 
-                                # Populate data for any matching player keywords found
                                 for keyword in player_profiles:
                                     if keyword in player_name_in_row:
                                         p = player_profiles[keyword]
@@ -287,72 +285,44 @@ if __name__ == "__main__":
                                         p["pir"] += int(row.get('PIR', '0')) if row.get('PIR', '0').isdigit() else 0
                                         p["games"] += 1
 
-                                # Also keep single player legacy path data fallback
-                                match_player = False
-                                if player_words:
-                                    if any(word in player_name_in_row for word in player_words):
-                                        match_player = True
-                                else:
-                                    match_player = True
-                                
-                                if match_player:
-                                    pts_str = row.get('PTS', '0')
-                                    try: pts_val = int(pts_str) if pts_str and pts_str.isdigit() else 0
-                                    except: pts_val = 0
-                                    total_points += pts_val
-                                    games_played += 1
-                                    player_full_name = row.get('Player', 'The player')
-                                    raw_data_output += f"Match: {row.get('Match')}, Team: {row.get('Team')}, Player: {row.get('Player')}, MIN: {row.get('MIN')}, PTS: {row.get('PTS')}, REB: {row.get('REB')}, AST: {row.get('AST')}, PIR: {row.get('PIR')}\n"
-
-                print(f"[DEBUG]: Σκαναρίστηκαν {matched_files_count} αρχεία CSV βάσει των κριτηρίων.")
-
-                # Count how many players actually returned valid statistical profiles
                 valid_players = [p for p in player_profiles.values() if p["games"] > 0]
-                is_comparison = len(valid_players) >= 2
+                sources_str = ", ".join(list(set(source_files_scanned))) if source_files_scanned else "Local CSV Database"
 
-                # 3. Refine compiled data structures using the generative AI instance
-                if is_comparison:
-                    comp_summary = "Comparison Statistical Data Summary:\n"
+                if valid_players:
+                    stats_context = "Available Calculated Statistics from Database:\n"
                     for p in valid_players:
-                        comp_summary += f"- {p['name']}: {p['games']} games, Avg PTS: {round(p['pts']/p['games'], 1)}, Avg REB: {round(p['reb']/p['games'], 1)}, Avg AST: {round(p['ast']/p['games'], 1)}, Avg PIR: {round(p['pir']/p['games'], 1)}\n"
+                        stats_context += (
+                            f"Player: {p['name']}\n"
+                            f"- Total Games Played: {p['games']}\n"
+                            f"- Total Points: {p['pts']} (Avg: {round(p['pts']/p['games'], 2) if p['games']>0 else 0})\n"
+                            f"- Total Rebounds: {p['reb']} (Avg: {round(p['reb']/p['games'], 2) if p['games']>0 else 0})\n"
+                            f"- Total Assists: {p['ast']} (Avg: {round(p['ast']/p['games'], 2) if p['games']>0 else 0})\n"
+                            f"- Total PIR: {p['pir']} (Avg: {round(p['pir']/p['games'], 2) if p['games']>0 else 0})\n\n"
+                        )
                     
                     refine_prompt = (
-                        f"You are an expert EuroLeague Head Scout and Journalist. Analyze the following calculated averages for these players:\n\n"
-                        f"{comp_summary}\n"
-                        f"Write a comprehensive, professional head-to-head comparison report in clean plain text sentences without asterisks or bold text. Contrast their strengths based on these exact numbers."
+                        f"<SYSTEM_GUARDS>\n"
+                        f"You are a professional EuroLeague Sports Journalist and Head Basketball Scout.\n"
+                        f"Answer the user's question using ONLY the calculated data provided below:\n\n"
+                        f"{stats_context}\n"
+                        f"Question: {user_input}\n\n"
+                        f"CRITICAL RULES:\n"
+                        f"1. Answer precisely what is asked. If multiple target players are being compared, write a comprehensive, detailed head-to-head scouting report comparing and contrasting their averages, strengths, efficiency (PIR), and roles based on the provided numbers.\n"
+                        f"2. Structure your analysis into detailed paragraphs. Make the output narrative, professional, and thorough, as if writing an article.\n"
+                        f"3. STRICTLY NO ASTERISKS (*) or bold markdown format anywhere in the response. Output only clean raw text.\n"
+                        f"4. Do NOT introduce or mention any player who is not explicitly included in the provided data context above.\n"
+                        f"</SYSTEM_GUARDS>"
                     )
+                    
                     refine_chain = llm | StrOutputParser()
                     final_speech = refine_chain.invoke([HumanMessage(content=refine_prompt)])
                     print(f"\n\n{final_speech.strip()}")
+                    print(f"\n[Sources Used]: ['{sources_str}'] (Box Score Database Scan)")
                     chat_history_manual.append(f"User: {user_input}")
                     chat_history_manual.append(f"Agent: {final_speech.strip()}")
                 else:
-                    if not raw_data_output.strip():
-                        print("\nCould not find specific statistics for this query. Please check data files.")
-                    else:
-                        if is_average_requested and games_played > 0:
-                            # Use the specific filtered player full name if available from profiles
-                            display_name = valid_players[0]["name"] if valid_players else player_full_name
-                            actual_games = valid_players[0]["games"] if valid_players else games_played
-                            actual_total_pts = valid_players[0]["pts"] if valid_players else total_points
-                            calculated_avg = round(actual_total_pts / actual_games, 2)
-                            
-                            refine_prompt = (
-                                f"You are a professional sports journalist. Based on the calculated data, {display_name} has scored a total of {actual_total_pts} points across {actual_games} games, resulting in an average of {calculated_avg} points per game.\n"
-                                f"Convert this statistical fact into a smooth, natural plain text response sentence without asterisks or bold formatting."
-                            )
-                        else:
-                            refine_prompt = (
-                                f"You are a professional sports journalist. Convert the following raw basketball statistics into a single, smooth, natural plain text sentence without asterisks or bold formatting.\n"
-                                f"CRITICAL: Focus ONLY on the requested matchup and do not mix up separate games.\n\n"
-                                f"Raw Statistics:\n{raw_data_output}"
-                            )
-                        
-                        refine_chain = llm | StrOutputParser()
-                        final_speech = refine_chain.invoke([HumanMessage(content=refine_prompt)])
-                        print(f"\n\n{final_speech.strip()}")
-                        chat_history_manual.append(f"User: {user_input}")
-                        chat_history_manual.append(f"Agent: {final_speech.strip()}")
+                    print(f"\nNo statistics found in context for the requested player(s). Analysis cannot be made.")
+                    
             except Exception as e:
                 print(f"\nTool Error: {e}")
                 
@@ -382,8 +352,6 @@ if __name__ == "__main__":
                 if not optimized_query: optimized_query = user_input
 
                 # 2. Extract specific matchup attributes to enforce direct cache file routing
-                teams_list = ['olympiacos', 'panathinaikos', 'real', 'partizan', 'bayern', 'dubai', 'barcelona', 'barca', 'zvezda', 'maccabi', 'paris', 'armani', 'baskonia', 'valencia','efes','virtus','asvel','zalgiris','hapoel','monaco','fenerbahce']
-                
                 found_teams_with_positions = []
                 for team in teams_list:
                     pos = user_input_clean.find(team)
@@ -422,7 +390,9 @@ if __name__ == "__main__":
                         source_file_used = ", ".join(list(set([os.path.basename(doc.metadata.get('source', '')) for doc in source_documents])))
 
                 # 4. Synthesize finalized plain text output and keep memory array fresh
+                # HARDENED: Unified XML Guards in conversational path to isolate data retrieval
                 qa_prompt = (
+                    f"<SYSTEM_GUARDS>\n"
                     f"You are a EuroLeague Master Analyst & Journalist. Use the provided Context and Chat History to answer the user's Question with absolute accuracy.\n\n"
                     f"### CRITICAL MANDATORY RULES:\n"
                     f"1. **STRICT QUESTION FOCUS**: Answer only and precisely what the user is asking. If asked about a coach or stadium, give only that in one plain text sentence.\n"
@@ -432,7 +402,8 @@ if __name__ == "__main__":
                     f"5. **NO FILENAMES**: Do not mention filenames like '.txt' or '.csv'.\n\n"
                     f"Chat History:\n{history_str}\n\n"
                     f"Context:\n{context_content}\n\n"
-                    f"Question: {user_input}"
+                    f"Question: {user_input}\n"
+                    f"</SYSTEM_GUARDS>"
                 )
                 
                 qa_response_chain = llm | StrOutputParser()
