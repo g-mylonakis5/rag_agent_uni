@@ -9,7 +9,7 @@ import shutil
 import csv
 import ast
 import re
-from glob import glob 
+import glob as glob_module  # Fix: Renamed to prevent module shadowing bugs
 
 # Third-party LangChain & Google GenAI Imports
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -56,7 +56,7 @@ def setup_rag_index(rebuild=False):
             if not os.path.exists(folder_path):
                 continue
             
-            files = glob(os.path.join(folder_path, "*.txt")) + glob(os.path.join(folder_path, "*.csv"))
+            files = glob_module.glob(os.path.join(folder_path, "*.txt")) + glob_module.glob(os.path.join(folder_path, "*.csv"))
             
             for file_path in files:
                 try:
@@ -217,24 +217,29 @@ if __name__ == "__main__":
         
         print("Thinking...")
         
-        rce_keywords = ['variance', 'correlation', 'simulate', 'predict', 'regression', 'advanced stats', 'calculate python', 'run script']
+        # Expanded keywords to catch Advanced Analytics, Efficiency, TS%, eFG%, and Ratios
+        rce_keywords = ['variance', 'correlation', 'simulate', 'predict', 'regression', 'advanced stats', 'calculate python', 'run script', 'efficiency', 'ts%', 'efg%', 'per minute', 'pts / min', 'ratio', 'true shooting', 'effective field goal']
         stats_keywords = ['best player', 'highest pir', 'total points', 'average', 'καλυτερος παικτης', 'καλύτερος παίκτης', 'σκορερ', 'στατιστικα σε ολα', 'scorer', 'best scorer', 'points per game', 'points', 'statline', 'stats', 'rebounds', 'assists', 'steals', 'blocks', 'pir', 'stl', 'blk', 'pts', 'reb', 'ast', 'compare', 'leading', 'most', 'rebounder', 'passer', 'assister', 'led', 'leader', 'top']
         
         rce_pattern = re.compile(r'\b(?:' + '|'.join(map(re.escape, rce_keywords)) + r')\b', re.IGNORECASE)
         stats_pattern = re.compile(r'\b(?:' + '|'.join(map(re.escape, stats_keywords)) + r')\b', re.IGNORECASE)
         
-        # --- ROUTE C: ADVANCED ANALYTICS ENGINE ---
+        # --- ROUTE C: ADVANCED ANALYTICS ENGINE (Python REPL) ---
         if rce_pattern.search(user_input):
             try:
-                print("[System]: Advanced Math Query detected. Routing to Python Code Interpreter Tool...")
+                print("[System]: Advanced Math/Analytics Query detected. Routing to Python Code Interpreter Tool...")
                 rce_prompt = (
                     f"You are a Python Data Scientist for EuroLeague analytics. "
                     f"Write a Python script to solve or answer the following request: '{user_input}'. "
                     f"CRITICAL DATA SCHEMA: The CSV files in 'data/box_scores' have the exact following column headers: "
-                    f"['Match', 'Team', 'Player', 'MIN', 'PTS', 'REB', 'AST', 'STL', 'PIR']. Always use these exact uppercase column names when filtering or calculating with pandas.\n"
+                    f"['Match', 'Team', 'Player', 'MIN', 'PTS', '2FG', '3FG', 'FT', 'REB', 'AST', 'STL', 'PIR']. Always use these exact uppercase column names when filtering or calculating with pandas.\n"
                     f"CRITICAL FILTERING RULE: When filtering by Player name, NEVER use exact equality (==). ALWAYS use case-insensitive substring matching like df['Player'].str.contains('walkup', case=False, na=False) because names in CSVs are formatted as 'Last, First' (e.g., 'Walkup, Thomas') or abbreviated.\n"
+                    f"CRITICAL STRING PARSING RULES:\n"
+                    f"1. MINUTES (MIN): Formatted as strings like '24:26' (MM:SS) or '24'. Convert to float minutes using: df['MIN_clean'] = df['MIN'].astype(str).str.split(':').str[0].astype(float) + df['MIN'].astype(str).str.split(':').str[1].fillna(0).astype(float)/60\n"
+                    f"2. SHOOTING SPLITS (2FG, 3FG, FT): Formatted as strings like '5/6' (Made/Attempted). Extract attempts using: df['2FGA'] = df['2FG'].astype(str).str.split('/').str[1].fillna(0).astype(int), and similarly for 3FGA and FTA. Use df['FGA'] = df['2FGA'] + df['3FGA'].\n"
                     f"CRITICAL SECURITY RULE: Do not include or expose any system-level file reading or sensitive path leakage in script outputs.\n"
-                    f"Return ONLY runnable executable Python code inside ```python and ``` blocks. Do not add explanations."
+                    f"Print a clear, readable text response at the end explaining the calculated results.\n"
+                    f"Return ONLY runnable executable Python code inside ```python and ``` blocks. Do not add explanations outside the code block."
                 )
                 
                 code_chain = llm | StrOutputParser()
@@ -256,13 +261,15 @@ if __name__ == "__main__":
                     chat_history_manual.append(f"Agent: [Blocked by Security Defense Layer: {reason}]")
                 else:
                     print("[SECURITY PASS]: Code passed safety validation. Executing via Python REPL Tool...\n")
-                    exec(clean_code, globals(), locals())
+                    # Fix: Оρίζουμε το __name__ ως __main__ ώστε τα blocks if __name__ == '__main__': να εκτελούνται πάντα 100%!
+                    exec_scope = {'__name__': '__main__'}
+                    exec(clean_code, exec_scope, exec_scope)
                     chat_history_manual.append(f"User: {user_input}")
                     chat_history_manual.append(f"Agent: [Executed Advanced Analytics Python Script successfully]")
             except Exception as e:
                 print(f"\n[Code Execution Error]: {e}")
                 
-       # --- ROUTE A: NATIVE CODE-DRIVEN RAG ---
+        # --- ROUTE A: NATIVE CODE-DRIVEN RAG ---
         elif stats_pattern.search(user_input):
             try:
                 user_input_clean = user_input.lower()
@@ -296,7 +303,7 @@ if __name__ == "__main__":
                         player_words.append(w_cleaned)
 
                 box_scores_dir = os.path.abspath(os.path.join(os.getcwd(), 'data', 'box_scores'))
-                csv_files = glob(os.path.join(box_scores_dir, '*.csv'))
+                csv_files = glob_module.glob(os.path.join(box_scores_dir, '*.csv'))
                 
                 if is_leaderboard_query:
                     if any(w in user_input.lower() for w in ['block', 'blocks', 'blk']):
@@ -448,22 +455,25 @@ if __name__ == "__main__":
                     for p in valid_players:
                         comp_summary += f"- {p['name']}: {p['games']} games, Avg PTS: {round(p['pts']/p['games'], 1)}, Avg REB: {round(p['reb']/p['games'], 1)}, Avg AST: {round(p['ast']/p['games'], 1)}, Avg STL: {round(p['stl']/p['games'], 1)}, Avg PIR: {round(p['pir']/p['games'], 1)}\n"
                     
-                    force_scouting_report = any(w in user_input.lower() for w in ['compare', 'scouting', 'report', 'analysis', 'head-to-head', 'breakdown'])
-                    is_direct_stat_question = not force_scouting_report and any(w in user_input.lower() for w in ['who ', 'which ', 'more ', 'higher ', 'better ', 'less ', 'fewer ', 'most ', 'led '])
+                    force_scouting_report = any(w in user_input.lower() for w in ['scouting', 'report', 'analysis', 'head-to-head', 'breakdown', 'compare stats in all', 'στατιστικα σε ολα'])
+                    # Fix: Αν η ερώτηση περιέχει συγκεκριμένες λέξεις σύγκρισης/πόντων, κόβουμε το scouting report και απαντάμε σύντομα!
+                    is_direct_stat_question = not force_scouting_report and any(w in user_input.lower() for w in ['who ', 'which ', 'more ', 'higher ', 'better ', 'less ', 'fewer ', 'most ', 'led ', 'scoring average', 'average to that of'])
                     
                     if is_direct_stat_question:
-                        if metric_type == 'pts': target_stat = "points"
-                        elif metric_type == 'reb': target_stat = "rebounds"
-                        elif metric_type == 'ast': target_stat = "assists"
-                        elif metric_type == 'stl': target_stat = "steals"
-                        else: target_stat = "PIR"
+                        if any(w in user_input.lower() for w in ['rebound', 'rebounds', 'reb', 'rebounder']): target_stat = "rebounds"
+                        elif any(w in user_input.lower() for w in ['assist', 'assists', 'ast', 'passer', 'assister']): target_stat = "assists"
+                        elif any(w in user_input.lower() for w in ['steal', 'steals', 'stl']): target_stat = "steals"
+                        elif any(w in user_input.lower() for w in ['pir', 'efficiency', 'rating']): target_stat = "PIR"
+                        else: target_stat = "points"
 
                         refine_prompt = (
                             f"<SYSTEM_GUARDS>\n"
                             f"You are a professional sports journalist. Based on the statistical data provided below:\n\n"
                             f"<untrusted_context>\n{comp_summary}\n</untrusted_context>\n\n"
-                            f"Answer the user's specific question DIRECTLY and CONCISELY in 1 or 2 clean plain text sentences without asterisks or bold text. "
-                            f"CRITICAL: The user is specifically asking about **{target_stat.upper()}**. State clearly which player had more {target_stat} and include their exact average compared to the other player.\n"
+                            f"CRITICAL: The user is asking a direct, specific question about **{target_stat.upper()}** (e.g., scoring average or total). "
+                            f"DO NOT write a full scouting report or mention unrelated stats like assists or rebounds. "
+                            f"Answer directly and concisely in 1 or 2 clean plain text sentences without asterisks. "
+                            f"State clearly which player has the higher {target_stat} average and provide the exact comparison numbers.\n"
                             f"</SYSTEM_GUARDS>"
                         )
                     else:
@@ -528,8 +538,7 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"\nTool Error: {e}")
                 
-      
-        #  ROUTE B: UNIFIED CONVERSATIONAL RAG 
+        # --- ROUTE B: UNIFIED CONVERSATIONAL RAG ---
         else:
             try:
                 user_input_clean = user_input.lower()
