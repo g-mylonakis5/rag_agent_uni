@@ -1,5 +1,3 @@
-print(">>> ΤΡΕΧΕΙ ΤΟ ΣΩΣΤΟ ΑΡΧΕΙΟ <<<")
-
 """
 EuroLeague RAG Agent - Security Benchmarking Engine
 Developed for Automated Exploit Testing & Utility Evaluation

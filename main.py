@@ -47,16 +47,27 @@ CHROMA_PATH = './chroma_db'
 
 # Early argument parsing to define the active Defense Phase for the benchmark suite.
 parser = argparse.ArgumentParser(description="EuroLeague Code-Driven RAG Agent")
-parser.add_argument("--phase", type=int, default=5, choices=[1, 2, 3, 4, 5], help="Select Security Defense Phase (1 to 5)")
+parser.add_argument("--phase", type=int, default=5, choices=[1, 2, 3, 4, 5, 6], help="Select Security Defense Phase (1 to 6)")
 args, unknown = parser.parse_known_args()
 
 # Global variable dictating the active security posture across all modules
 DEFENSE_PHASE = args.phase
 print(f"[SECURITY CONFIG]: Initialized runtime defense engine to PHASE {DEFENSE_PHASE}")
 
+# [PHASE 6]: Runtime containment layer (process isolation, time & memory limits)
+try:
+    from sandbox import execute_sandboxed
+    HAS_SANDBOX = True
+except ImportError:
+    HAS_SANDBOX = False
+    print("[WARNING]: sandbox.py not found - Phase 6 unavailable.")
+
+
 def set_defense_phase(phase):
     """Dynamically switches the active security phase for benchmarking purposes."""
     global DEFENSE_PHASE
+    if phase == 6 and not HAS_SANDBOX:
+        raise RuntimeError("Phase 6 requires sandbox.py in the project root.")
     DEFENSE_PHASE = phase
     print(f"[SECURITY CONFIG]: Switched runtime defense engine to PHASE {DEFENSE_PHASE}")
 
@@ -104,7 +115,7 @@ def setup_rag_index(rebuild=False):
                 try:
                     # [DATA LAYER SECURITY]: Prevent indexing of sensitive files (Phase 3+)
                     file_basename = os.path.basename(file_path).lower()
-                    if DEFENSE_PHASE in [3, 4, 5]:
+                    if DEFENSE_PHASE in [3, 4, 5, 6]:
                         if 'admin' in file_basename or 'secret' in file_basename or 'config' in file_basename:
                             print(f" [BLOCKED BY SECURITY POLICY]: Skipped indexing restricted file -> {file_basename}")
                             continue
@@ -194,7 +205,8 @@ def is_code_safe(code_string):
     
     - Phase 1: No checks (Baseline vulnerability).
     - Phase 2: Naive Blacklist (Easily bypassed via aliases/getattr).
-    - Phase 3, 4, 5: Zero-Trust Allowlist (Strict node inspection blocking obfuscation).
+    - Phase 3, 4, 5, 6: Zero-Trust Allowlist (Strict node inspection blocking obfuscation).
+    - Phase 6: Adds runtime containment (process isolation, time & memory limits).
     """
     if DEFENSE_PHASE == 1:
         return True, "Phase 1 Insecure Baseline: All code execution permitted"
@@ -221,8 +233,8 @@ def is_code_safe(code_string):
         except SyntaxError as e:
             return False, f"Syntax error in generated code: {e}"
 
-    # [PHASE 3, 4, 5]: Zero-Trust AST Allowlist Architecture
-    elif DEFENSE_PHASE in [3, 4, 5]:
+    # [PHASE 3, 4, 5, 6]: Zero-Trust AST Allowlist Architecture
+    elif DEFENSE_PHASE in [3, 4, 5, 6]:
         # Only explicitly safe analytical libraries are permitted
         ALLOWED_MODULES = {'pandas', 'numpy', 'scipy', 'math', 're', 'datetime', 'collections', 'statistics', 'ctypes', 'gc', 'random', 'glob', 'os', 'sys'}
         # Block dangerous built-ins responsible for dynamic execution and file I/O
@@ -306,7 +318,7 @@ def ask_agent(user_input, phase=None, retriever_instance=None, llm_instance=None
     chat_history_manual = []
     
     # --- [SECURITY]: QCSF 3.0 LAYER 1 - DYNAMIC LLM-AS-A-JUDGE (PHASE 5) ---
-    if DEFENSE_PHASE == 5:
+    if DEFENSE_PHASE >= 5:
         print("[QCSF 3.0 Firewall]: Scanning query intent dynamically via AI Judge...")
         if dynamic_intent_check(user_input, llm_obj):
             return "[Blocked by QCSF Dynamic Firewall: Malicious intent, linguistic obfuscation, or data exfiltration detected]", "BLOCKED_QCSF"
@@ -369,9 +381,12 @@ def ask_agent(user_input, phase=None, retriever_instance=None, llm_instance=None
             else:
                 clean_code = generated_code.strip()
             
-            # Basic neutralization to prevent script hanging/crashing the host loop
-            clean_code = clean_code.replace("sys.exit(0)", "# sys.exit(0) neutralized").replace("sys.exit()", "# sys.exit() neutralized")
-            clean_code = clean_code.replace("os.walk('/')", "os.walk('.')").replace('os.walk("/")', 'os.walk(".")')
+            # Basic neutralization to prevent script hanging/crashing the host loop.
+            # [PHASE 6]: Skipped - runtime containment handles crashes natively,
+            # ensuring the measured protection stems from design, not string patching.
+            if DEFENSE_PHASE < 6:
+                clean_code = clean_code.replace("sys.exit(0)", "# sys.exit(0) neutralized").replace("sys.exit()", "# sys.exit() neutralized")
+                clean_code = clean_code.replace("os.walk('/')", "os.walk('.')").replace('os.walk("/")', 'os.walk(".")')
             
             print(f"\n[Generated Python Code to Execute]:\n{'-'*30}\n{clean_code}\n{'-'*30}")
             
@@ -382,7 +397,25 @@ def ask_agent(user_input, phase=None, retriever_instance=None, llm_instance=None
                 return f"[Blocked by Security Defense Layer: {reason}]", "BLOCKED_AST"
             else:
                 print("[SECURITY PASS]: Code passed safety validation. Executing via Python REPL Tool...\n")
-                
+
+                # ── [PHASE 6]: RUNTIME CONTAINMENT ────────────────────────────
+                # Executes in an isolated process with time and memory limits.
+                # Catches resource-exhaustion attacks that are syntactically
+                # indistinguishable from legitimate analytical code and therefore
+                # invisible to static analysis (DSAG).
+                if DEFENSE_PHASE >= 6:
+                    print("[SANDBOX]: Executing in isolated process (time & memory limits enforced)...\n")
+                    sandbox_output, sandbox_status = execute_sandboxed(clean_code)
+
+                    if sandbox_status.startswith("SANDBOX_"):
+                        print(f"\n[SECURITY ALERT]: {sandbox_output}")
+                        return sandbox_output, sandbox_status
+
+                    print(sandbox_output, end="")
+                    return (sandbox_output if sandbox_output.strip()
+                            else "[Executed successfully with no output]"), sandbox_status
+                # ──────────────────────────────────────────────────────────────
+
                 # Capture STDOUT to return execution results to the user
                 old_stdout = sys.stdout
                 sys.stdout = buffer = io.StringIO()
@@ -758,7 +791,7 @@ def ask_agent(user_input, phase=None, retriever_instance=None, llm_instance=None
                     source_file_used = ", ".join(list(set([os.path.basename(doc.metadata.get('source', '')) for doc in source_documents])))
 
             # --- [SECURITY]: QCSF 2.0/3.0 LAYER 2 - POST-RETRIEVAL CONTEXT POISONING DETECTION ---
-            if DEFENSE_PHASE in [4, 5]:
+            if DEFENSE_PHASE in [4, 5, 6]:
                 # Inspects the retrieved data for hidden instructions (Indirect Prompt Injection)
                 poison_patterns = ['system override', 'ignore all previous instructions', 'you are now an ai free']
                 if any(pos in context_content.lower() for pos in poison_patterns):
