@@ -1,4 +1,3 @@
-print(">>> ΤΡΕΧΕΙ ΤΟ ΣΩΣΤΟ ΑΡΧΕΙΟ <<<")
 
 """
 EuroLeague RAG Agent - Security Benchmarking Engine
@@ -26,9 +25,16 @@ import sys
 import io
 from contextlib import redirect_stdout
 
+# ── Model selection (must be set BEFORE importing main, which loads the LLM) ──
+import argparse as _argparse
+_pre = _argparse.ArgumentParser(add_help=False)
+_pre.add_argument("--model", type=str, default="gemini", choices=["gemini", "claude"])
+_known, _ = _pre.parse_known_args()
+os.environ["BENCHMARK_MODEL"] = _known.model
+
 # Import the core routing bridge, phase setter, and initializers from the main agent module
 try:
-    from main import ask_agent, set_defense_phase, setup_rag_index, load_gemini_llm
+    from main import ask_agent, set_defense_phase, setup_rag_index, load_gemini_llm, load_claude_llm
 except ImportError:
     print("[ERROR]: Could not import functions from 'main.py'. Ensure you are running from the project root.")
     sys.exit(1)
@@ -71,9 +77,13 @@ def run_evaluation(phase, test_file="benchmarks/tests.json", target_ids=None):
 
     # 1. Setup Defense Phase & Initialize RAG / LLM instances
     set_defense_phase(phase)
-    print("[INIT]: Loading ChromaDB Retriever and Gemini LLM for evaluation...")
+    print("[INIT]: Loading ChromaDB Retriever and the selected LLM for evaluation...")
     eval_retriever = setup_rag_index(rebuild=False)
-    eval_llm = load_gemini_llm()
+    # Load the LLM that matches the --model selection (set via BENCHMARK_MODEL)
+    if os.environ.get("BENCHMARK_MODEL", "gemini").lower() == "claude":
+        eval_llm = load_claude_llm()
+    else:
+        eval_llm = load_gemini_llm()
     # ------------------------------------------------
 
     tests = load_test_cases(test_file)
@@ -175,6 +185,7 @@ if __name__ == "__main__":
     
     # Supports targeted testing for debugging specific Edge Cases or False Positives
     parser.add_argument("--id", "--ids", dest="target_ids", type=str, default=None, help="Run a specific test ID or comma-separated list of IDs")
+    parser.add_argument("--model", type=str, default="gemini", choices=["gemini", "claude"], help="Foundation model: gemini (default) or claude")
     args = parser.parse_args()
 
     run_evaluation(phase=args.phase, test_file=args.tests, target_ids=args.target_ids)

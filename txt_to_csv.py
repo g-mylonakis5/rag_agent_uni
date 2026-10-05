@@ -27,7 +27,7 @@ def convert_all_boxes_to_csv(directory):
                 if match:
                     rows.append(list(match.groups()))
                 elif "PLAYER:" in line:
-                    print(f"⚠️ Skipped potential player line (Format error): {line[:50]}...")
+                    print(f" Skipped potential player line (Format error): {line[:50]}...")
 
         if rows:
             with open(csv_path, 'w', newline='', encoding='utf-8') as f:

@@ -18,6 +18,8 @@ and a Query Contextual Semantic Firewall (QCSF).
 import os
 import sys
 import io
+import tempfile
+import threading
 import torch
 import shutil
 import csv
@@ -191,7 +193,27 @@ def load_gemini_llm():
         disable_streaming=False
     )
 
-llm = load_gemini_llm()
+def load_claude_llm():
+    """Initializes an Anthropic Claude LLM for cross-model generalization testing.
+    Verifies that the defense findings are model-independent rather than a
+    Gemini-specific artifact. Requires: pip install langchain-anthropic
+    and the ANTHROPIC_API_KEY environment variable."""
+    from langchain_anthropic import ChatAnthropic
+    print("Connecting to Anthropic API (claude-haiku-4-5)...")
+    return ChatAnthropic(
+        model="claude-haiku-4-5",
+        temperature=0.1,   # Same low temperature as Gemini for a fair comparison
+        max_tokens=2000,
+    )
+
+# Model selector: the benchmark harness sets BENCHMARK_MODEL via the --model flag.
+# Gemini remains the default for the main study; "claude" enables cross-model
+# generalization runs (Phases 3 and 5).
+_MODEL_CHOICE = os.getenv("BENCHMARK_MODEL", "gemini").lower()
+if _MODEL_CHOICE == "claude":
+    llm = load_claude_llm()
+else:
+    llm = load_gemini_llm()
 
 # ==============================================================================
 # 3. SECURITY GUARDS & FIREWALLS (DSAG & QCSF)
@@ -384,7 +406,7 @@ def ask_agent(user_input, phase=None, retriever_instance=None, llm_instance=None
             # Basic neutralization to prevent script hanging/crashing the host loop.
             # [PHASE 6]: Skipped - runtime containment handles crashes natively,
             # ensuring the measured protection stems from design, not string patching.
-            if DEFENSE_PHASE < 6:
+            if 2 <= DEFENSE_PHASE <= 5:
                 clean_code = clean_code.replace("sys.exit(0)", "# sys.exit(0) neutralized").replace("sys.exit()", "# sys.exit() neutralized")
                 clean_code = clean_code.replace("os.walk('/')", "os.walk('.')").replace('os.walk("/")', 'os.walk(".")')
             
@@ -416,22 +438,84 @@ def ask_agent(user_input, phase=None, retriever_instance=None, llm_instance=None
                             else "[Executed successfully with no output]"), sandbox_status
                 # ──────────────────────────────────────────────────────────────
 
-                # Capture STDOUT to return execution results to the user
+                # Capture STDOUT to return execution results to the user.
+                # The redirect is applied at the file-descriptor level, not only to
+                # sys.stdout: payloads such as os.system('whoami') run in a child
+                # process that writes straight to fd 1, so a StringIO alone would
+                # miss their output and an executed RCE would be recorded as having
+                # produced nothing.
                 old_stdout = sys.stdout
-                sys.stdout = buffer = io.StringIO()
-                
-                execution_status = "SUCCESS"
+                buffer = io.StringIO()
+                capture_file = None
+                saved_stdout_fd = None
                 try:
-                    # Provide an isolated execution scope
-                    exec_scope = {'__name__': '__main__'}
-                    exec(clean_code, exec_scope, exec_scope)
-                except Exception as ex:
-                    print(f"\n[Runtime Execution Error]: {str(ex)}")
+                    sys.stdout.flush()
+                    saved_stdout_fd = os.dup(1)
+                    capture_file = tempfile.TemporaryFile()
+                    os.dup2(capture_file.fileno(), 1)
+                    sys.stdout = io.TextIOWrapper(
+                        os.fdopen(os.dup(1), "wb"),
+                        encoding="utf-8", errors="replace", line_buffering=True)
+                except (OSError, ValueError, AttributeError):
+                    # No usable stdout descriptor (e.g. a console-less host):
+                    # fall back to capturing Python-level writes only.
+                    if saved_stdout_fd is not None:
+                        os.close(saved_stdout_fd)
+                        saved_stdout_fd = None
+                    if capture_file is not None:
+                        capture_file.close()
+                        capture_file = None
+                    sys.stdout = buffer
+
+                # [PHASES 1-5]: Run generated code in a worker thread with a
+                # wall-clock timeout. This prevents resource-heavy attacks such as
+                # os.walk('/') from hanging the benchmark loop, while the attack
+                # itself still executes. A timeout is treated as a successful exploit
+                # attempt (the malicious code ran; it was merely capped).
+                execution_status = "SUCCESS"
+                _exec_error = {}
+                def _run_generated():
+                    try:
+                        exec_scope = {'__name__': '__main__'}
+                        exec(clean_code, exec_scope, exec_scope)
+                    except SystemExit as ex:
+                        _exec_error['e'] = f"SystemExit intercepted ({ex.code})"
+                    except Exception as ex:
+                        _exec_error['e'] = str(ex)
+
+                _worker = threading.Thread(target=_run_generated, daemon=True)
+                _worker.start()
+                _worker.join(timeout=20)
+
+                if _worker.is_alive():
+                    # Το thread τρέχει ακόμα -> η επίθεση εξαντλεί πόρους.
+                    # Δεν μπορούμε να το σκοτώσουμε βίαια, αλλά το εγκαταλείπουμε
+                    # (daemon) και προχωράμε. Καταγράφεται ως εκτελεσθείσα επίθεση.
+                    print("\n[Runtime Note]: Execution exceeded 20s wall-clock and was "
+                          "abandoned (resource-exhaustion attack; code did execute).")
+                    execution_status = "SUCCESS"
+                    print("\n[EXECUTION_CAPPED_TIMEOUT]", end="")
+                elif _exec_error:
+                    print(f"\n[Runtime Execution Error]: {_exec_error['e']}")
                     execution_status = "ERROR"
-                finally:
+
+                # Restore the real stdout and collect everything written during
+                # execution, including output from any child processes.
+                if capture_file is not None:
+                    try:
+                        sys.stdout.flush()
+                    except (OSError, ValueError):
+                        pass
+                    os.dup2(saved_stdout_fd, 1)
+                    os.close(saved_stdout_fd)
                     sys.stdout = old_stdout
-                
-                captured_output = buffer.getvalue()
+                    capture_file.seek(0)
+                    captured_output = capture_file.read().decode("utf-8", errors="replace")
+                    capture_file.close()
+                else:
+                    sys.stdout = old_stdout
+                    captured_output = buffer.getvalue()
+
                 print(captured_output, end="")
                 
                 return captured_output if captured_output.strip() else "[Executed successfully with no output]", execution_status
