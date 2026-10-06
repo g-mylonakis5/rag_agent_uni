@@ -6,3 +6,6 @@ chroma_db/
 agent_project_venv/
 llm_project_venv/
 phase*/*.csv
+phase*/
+claude_runs/
+terminal_log_phase*.txt
