@@ -1,5 +1,14 @@
 EuroLeague Code-Driven RAG Agent — Security Benchmark
 
+VIDEO DEMO:
+
+
+
+https://github.com/user-attachments/assets/c8d2e20e-7395-4b92-b204-fde7ec3e57b2
+
+
+
+
 A retrieval-augmented generation agent for EuroLeague basketball analytics, built as a testbed for measuring how well layered defenses protect an LLM agent that executes generated Python code.
 
 The agent answers questions about EuroLeague games from a local corpus of box scores and match summaries. For analytical questions it writes Python and runs it — which is exactly the capability an attacker wants to reach. The project implements five cumulative defense phases and measures, with a 74-case benchmark suite, how many attacks each phase stops.
